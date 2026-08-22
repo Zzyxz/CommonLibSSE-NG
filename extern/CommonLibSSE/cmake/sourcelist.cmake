@@ -1607,6 +1607,7 @@ set(SOURCES
 	include/RE/W/WerewolfFeedEffect.h
 	include/RE/Z/ZeroFunctionArguments.h
 	include/RE/Z/ZeroOverheadHeap.h
+	include/REL/AddressLibraryV5.h
 	include/REL/Relocation.h
 	include/SKSE/API.h
 	include/SKSE/Events.h

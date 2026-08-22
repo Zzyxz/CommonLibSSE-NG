@@ -1,8 +1,8 @@
 {
   "name": "commonlibsse-v2-template",
   "version-string": "1.0.0",
-  "description": "MIT-licensed SKSE plugin template with an isolated Address Library V2 loader path.",
-  "homepage": "https://github.com/your-account/CommonLibSSEV2-Template",
+  "description": "MIT-licensed SKSE plugin template with Address Library V2/V5 and Skyrim 1.7.99 support.",
+  "homepage": "https://github.com/Zzyxz/CommonLibSSE-NG",
   "license": "MIT",
   "dependencies": [
     "boost-stl-interfaces",

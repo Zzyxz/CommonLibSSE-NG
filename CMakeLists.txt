@@ -18,7 +18,7 @@ if(BUILD_SKYRIMVR)
 else()
 	set(COMMONLIB_NAME "CommonLibSSE")
 	set(COMMONLIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/extern/CommonLibSSE" CACHE PATH "MIT CommonLibSSE checkout")
-	# SSE/AE builds use the V2 Address Library reader.
+	# SSE/AE builds use the V2/V5 Address Library reader.
 	add_compile_definitions(SKYRIM_SUPPORT_AE)
 endif()
 

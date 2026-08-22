@@ -2,6 +2,9 @@
 
 #include <filesystem>
 #include <fstream>
+#include <limits>
+
+#include "REL/AddressLibraryV5.h"
 
 #define REL_MAKE_MEMBER_FUNCTION_POD_TYPE_HELPER_IMPL(a_nopropQual, a_propQual, ...)              \
 	template <                                                                                    \
@@ -557,7 +560,11 @@ namespace REL
 			{
 				const std::span<const mapping_t> id2offset = IDDatabase::get()._id2offset;
 				_offset2id.reserve(id2offset.size());
-				_offset2id.insert(_offset2id.begin(), id2offset.begin(), id2offset.end());
+				for (const auto& mapping : id2offset) {
+					if (mapping.offset != 0) {
+						_offset2id.push_back(mapping);
+					}
+				}
 				std::sort(
 					a_policy,
 					_offset2id.begin(),
@@ -625,7 +632,7 @@ namespace REL
 				[](auto&& a_lhs, auto&& a_rhs) {
 					return a_lhs.id < a_rhs.id;
 				});
-			if (it == _id2offset.end()) {
+			if (it == _id2offset.end() || it->id != a_id) {
 				stl::report_and_fail(
 					fmt::format(
 						"Failed to find the id within the address library: {}\n"
@@ -646,6 +653,18 @@ namespace REL
 			void read(binary_io::file_istream& a_in)
 			{
 				const auto [format] = a_in.read<std::int32_t>();
+				_format = format;
+
+				if (format == detail::address_library_v5::format) {
+					const auto header = detail::address_library_v5::read_header(a_in, format);
+					for (std::size_t i = 0; i < header.version.size(); ++i) {
+						_version[i] = static_cast<std::uint16_t>(header.version[i]);
+					}
+					_pointerSize = header.pointer_size;
+					_addressCount = header.address_count;
+					return;
+				}
+
 #ifdef SKYRIM_SUPPORT_AE
 				if (format != 2) {
 #else
@@ -670,17 +689,23 @@ namespace REL
 				const auto [nameLen] = a_in.read<std::int32_t>();
 				a_in.seek_relative(nameLen);
 
-				a_in.read(_pointerSize, _addressCount);
+				std::int32_t pointerSize{};
+				std::int32_t addressCount{};
+				a_in.read(pointerSize, addressCount);
+				_pointerSize = static_cast<std::uint64_t>(pointerSize);
+				_addressCount = static_cast<std::uint64_t>(addressCount);
 			}
 
 			[[nodiscard]] std::size_t   address_count() const noexcept { return static_cast<std::size_t>(_addressCount); }
-			[[nodiscard]] std::uint64_t pointer_size() const noexcept { return static_cast<std::uint64_t>(_pointerSize); }
+			[[nodiscard]] std::int32_t  format() const noexcept { return _format; }
+			[[nodiscard]] std::uint64_t pointer_size() const noexcept { return _pointerSize; }
 			[[nodiscard]] Version       version() const noexcept { return _version; }
 
 		private:
-			Version      _version;
-			std::int32_t _pointerSize{ 0 };
-			std::int32_t _addressCount{ 0 };
+			Version       _version;
+			std::int32_t  _format{ 0 };
+			std::uint64_t _pointerSize{ 0 };
+			std::uint64_t _addressCount{ 0 };
 		};
 
 		IDDatabase() { load(); }
@@ -707,9 +732,9 @@ namespace REL
 						version.string()))
 					.value_or(L"<unknown filename>"s);
 
-			// Prefer a compatible file in the normal Address Library location.
-			// Files using another format are handled by the isolated location.
-			if (is_compatible_format(filename)) {
+			// Prefer the normal Address Library path. Both legacy V2 and V5 files
+			// are supported there.
+			if (std::filesystem::exists(filename)) {
 				load_file(filename, version);
 				return;
 			}
@@ -733,19 +758,6 @@ namespace REL
 			load_file(filename, version);
 		}
 
-		[[nodiscard]] static bool is_compatible_format(const stl::zwstring& a_filename)
-		{
-			std::ifstream in(std::filesystem::path{ std::wstring{ a_filename } }, std::ios::binary);
-			std::int32_t  format{};
-			in.read(reinterpret_cast<char*>(std::addressof(format)), sizeof(format));
-
-#ifdef SKYRIM_SUPPORT_AE
-			return in && format == 2;
-#else
-			return in && format == 1;
-#endif
-		}
-
 		void load_file(stl::zwstring a_filename, Version a_version)
 		{
 			try {
@@ -756,7 +768,9 @@ namespace REL
 					stl::report_and_fail("version mismatch"sv);
 				}
 
-				auto mapname = L"CommonLibSSEOffsets-v2-"s;
+				auto mapname = header.format() == detail::address_library_v5::format ?
+				                   L"CommonLibSSEOffsets-v5-"s :
+				                   L"CommonLibSSEOffsets-v2-"s;
 				mapname += a_version.wstring();
 				const auto byteSize = static_cast<std::size_t>(header.address_count()) * sizeof(mapping_t);
 				if (_mmap.open(mapname, byteSize)) {
@@ -787,6 +801,18 @@ namespace REL
 
 		void unpack_file(binary_io::file_istream& a_in, header_t a_header)
 		{
+			if (a_header.format() == detail::address_library_v5::format) {
+				detail::address_library_v5::read_entries(
+					a_in,
+					static_cast<std::uint32_t>(a_header.address_count()),
+					[this](std::uint64_t a_id, std::uint64_t a_rva) {
+						_id2offset[static_cast<std::size_t>(a_id)] = a_rva != 0 ?
+						                                                    mapping_t{ a_id, a_rva } :
+						                                                    mapping_t{ std::numeric_limits<std::uint64_t>::max(), 0 };
+					});
+				return;
+			}
+
 			std::uint8_t  type = 0;
 			std::uint64_t id = 0;
 			std::uint64_t offset = 0;
