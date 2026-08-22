@@ -652,7 +652,7 @@ namespace REL
 		public:
 			void read(binary_io::file_istream& a_in)
 			{
-				const auto [format] = a_in.read<std::int32_t>();
+				const auto [format] = a_in.read<std::uint32_t>();
 				_format = format;
 
 				if (format == detail::address_library_v5::format) {
@@ -697,13 +697,13 @@ namespace REL
 			}
 
 			[[nodiscard]] std::size_t   address_count() const noexcept { return static_cast<std::size_t>(_addressCount); }
-			[[nodiscard]] std::int32_t  format() const noexcept { return _format; }
+			[[nodiscard]] std::uint32_t format() const noexcept { return _format; }
 			[[nodiscard]] std::uint64_t pointer_size() const noexcept { return _pointerSize; }
 			[[nodiscard]] Version       version() const noexcept { return _version; }
 
 		private:
 			Version       _version;
-			std::int32_t  _format{ 0 };
+			std::uint32_t _format{ 0 };
 			std::uint64_t _pointerSize{ 0 };
 			std::uint64_t _addressCount{ 0 };
 		};
@@ -766,6 +766,11 @@ namespace REL
 				header.read(in);
 				if (header.version() != a_version) {
 					stl::report_and_fail("version mismatch"sv);
+				}
+				if (header.format() == detail::address_library_v5::format &&
+					std::filesystem::file_size(a_filename) !=
+						detail::address_library_v5::expected_size(static_cast<std::uint32_t>(header.address_count()))) {
+					stl::report_and_fail("invalid Address Library V5 file size"sv);
 				}
 
 				auto mapname = header.format() == detail::address_library_v5::format ?
