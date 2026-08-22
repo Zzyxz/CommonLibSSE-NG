@@ -1,20 +1,29 @@
-# dot folders
-.idea/
-.vs*/
-.xmake/
+# Legacy SkyPatcher files intentionally excluded from the clean template.
+/*.cpp
+/*.h
+/PCH.cpp.local-backup
+/PCH.h.local-backup
+/src (2).zip
+/src (3).zip
+/src (4).zip
+/src.zip
+/ROBco_Patcher_Optimization_Guide.md
+/buildclean/
+/buildcompatAE/
+/buildcompatSSE/
+/buildcompatVR2/
+/build/
+/template-build/
+/template-build-vr/
+/verify-build/
 
-# folders
-/build*
-/out*
-/vs*
-
-# files
-*.cmake
-*.zip
-CMakeUserPresets.json
-CMakeFiles
+# CMake / IDE artifacts
 CMakeCache.txt
-conan.lock
-conanbuildinfo.*
-conaninfo.txt
-graph_info.json
+CMakeFiles/
+cmake_install.cmake
+compile_commands.json
+*.sln
+*.vcxproj*
+*.user
+*.pdb
+*.dll

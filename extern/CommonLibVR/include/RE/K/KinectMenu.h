@@ -1,0 +1,40 @@
+#pragma once
+
+#include "RE/B/BSTEvent.h"
+#include "RE/G/GFxValue.h"
+#include "RE/I/IMenu.h"
+
+namespace RE
+{
+	class MenuOpenCloseEvent;
+
+	// menuDepth = 6
+	// flags = kAllowSaving | kCustomRendering | kAssignCursorToRenderer
+	// context = kNone
+	class KinectMenu :
+		public IMenu,                            // 00
+		public BSTEventSink<MenuOpenCloseEvent>  // 30
+	{
+	public:
+		inline static constexpr auto      RTTI = RTTI_KinectMenu;
+		constexpr static std::string_view MENU_NAME = "Kinect Menu";
+
+		~KinectMenu() override;  // 00
+
+		// override (IMenu)
+		UI_MESSAGE_RESULTS ProcessMessage(UIMessage& a_message) override;  // 04
+
+		// override (BSTEventSink<MenuOpenCloseEvent>)
+		BSEventNotifyControl ProcessEvent(const MenuOpenCloseEvent* a_event, BSTEventSource<MenuOpenCloseEvent>* a_eventSource) override;  // 01
+
+		// members
+		GFxValue root;  // 38 - "Menu_mc"
+	private:
+		KEEP_FOR_RE()
+	};
+#ifndef SKYRIMVR
+	static_assert(sizeof(KinectMenu) == 0x50);
+#else
+	static_assert(sizeof(KinectMenu) == 0x60);
+#endif
+}

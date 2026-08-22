@@ -1,0 +1,23 @@
+# dot folders
+.vs*/
+.vscode/
+.xmake/
+
+# folders
+build*/
+out*/
+vs*/
+
+# files
+*.zip
+CMakeUserPresets.json
+.DS_Store
+vcpkg*
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+/out*
+/.vs*

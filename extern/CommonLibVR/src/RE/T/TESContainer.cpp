@@ -1,0 +1,260 @@
+#include "RE/T/TESContainer.h"
+
+#include "RE/F/FormTypes.h"
+#include "RE/T/TESForm.h"
+#include "RE/T/TESBoundObject.h"
+#include "RE/B/BGSKeywordForm.h"
+
+
+namespace RE
+{
+	ContainerObject::ContainerObject() :
+		count(0),
+		pad04(0),
+		obj(nullptr),
+		itemExtra()
+	{}
+
+	ContainerObject::ContainerObject(TESBoundObject* a_obj, std::int32_t a_count) :
+		count(a_count),
+		pad04(0),
+		obj(a_obj),
+		itemExtra()
+	{}
+
+	ContainerObject::ContainerObject(TESBoundObject* a_obj, std::int32_t a_count, TESForm* a_owner) :
+		count(a_count),
+		pad04(0),
+		obj(a_obj),
+		itemExtra(new ContainerItemExtra(a_owner))
+	{}
+
+	void TESContainer::CopyObjectList(const std::vector<ContainerObject*>& a_copiedData)
+	{
+		const auto oldData = containerObjects;
+
+		const auto newSize = a_copiedData.size();
+		const auto newData = calloc<ContainerObject*>(newSize);
+		std::ranges::copy(a_copiedData, newData);
+
+		numContainerObjects = static_cast<std::uint32_t>(newSize);
+		containerObjects = newData;
+
+		free(oldData);
+	}
+
+	bool TESContainer::AddObjectToContainer(TESBoundObject* a_object, std::int32_t a_count, TESForm* a_owner)
+	{
+		bool added = false;
+		for (std::uint32_t i = 0; i < numContainerObjects; ++i) {
+			if (const auto entry = containerObjects[i]; entry && entry->obj == a_object) {
+				entry->count += a_count;
+				added = true;
+				break;
+			}
+		}
+		if (!added) {
+			std::vector<ContainerObject*> copiedData{ containerObjects, containerObjects + numContainerObjects };
+			const auto                    newObj = new ContainerObject(a_object, a_count, a_owner);
+			copiedData.push_back(newObj);
+			CopyObjectList(copiedData);
+			return true;
+		}
+		return added;
+	}
+
+	bool TESContainer::AddObjectsToContainer(std::map<TESBoundObject*, std::int32_t>& a_objects, TESForm* a_owner)
+	{
+		for (std::uint32_t i = 0; i < numContainerObjects; ++i) {
+			if (const auto entry = containerObjects[i]; entry && entry->obj) {
+				if (auto it = a_objects.find(entry->obj); it != a_objects.end()) {
+					entry->count += it->second;
+					a_objects.erase(it);
+				}
+			}
+		}
+		if (!a_objects.empty()) {
+			std::vector<ContainerObject*> copiedData{ containerObjects, containerObjects + numContainerObjects };
+			for (auto& [object, count] : a_objects) {
+				const auto newObj = new ContainerObject(object, count, a_owner);
+				copiedData.push_back(newObj);
+			}
+			CopyObjectList(copiedData);
+		}
+		return true;
+	}
+
+	auto TESContainer::GetContainerObjectAt(std::uint32_t a_idx) const
+		-> std::optional<ContainerObject*>
+	{
+		if (a_idx < numContainerObjects) {
+			return std::make_optional(containerObjects[a_idx]);
+		} else {
+			return std::nullopt;
+		}
+	}
+
+	auto TESContainer::GetContainerObjectIndex(TESBoundObject* a_object, std::int32_t a_count) const
+		-> std::optional<std::uint32_t>
+	{
+		if (containerObjects) {
+			for (std::uint32_t i = 0; i < numContainerObjects; ++i) {
+				const auto entry = containerObjects[i];
+				if (entry && entry->obj == a_object && entry->count == a_count) {
+					return i;
+				}
+			}
+		}
+		return std::nullopt;
+	}
+
+	int TESContainer::MultObjectCountInContainer(TESBoundObject* a_object, std::int32_t a_mult)
+	{
+		int multiplied = 0;
+		std::vector<ContainerObject*> copiedData{ containerObjects, containerObjects + numContainerObjects };
+		for (auto index : copiedData) {
+			if (index->obj && index->obj->formID == a_object->formID) {
+				index->count = std::ceil(index->count * a_mult);
+				multiplied++;
+			}
+		}
+		CopyObjectList(copiedData);
+		return multiplied;
+	}
+
+	std::int32_t TESContainer::CountObjectsInContainer(TESBoundObject* a_object) const
+	{
+		std::int32_t count = 0;
+		ForEachContainerObject([&](ContainerObject& a_contObj) {
+			if (a_contObj.obj == a_object) {
+				count += a_contObj.count;
+			}
+			return BSContainer::ForEachResult::kContinue;
+		});
+		return count;
+	}
+
+	bool TESContainer::RemoveObjectFromContainer(TESBoundObject* a_object, std::int32_t a_count)
+	{
+		if (auto index = GetContainerObjectIndex(a_object, a_count); index.has_value()) {
+			std::vector<ContainerObject*> copiedData{ containerObjects, containerObjects + numContainerObjects };
+			copiedData.erase(copiedData.cbegin() + *index);
+			CopyObjectList(copiedData);
+			return true;
+		}
+		return false;
+	}
+
+	bool TESContainer::RemoveAllObjectFromContainer()
+	{
+		std::vector<ContainerObject*> copiedData{ containerObjects, containerObjects + numContainerObjects };
+		copiedData.clear();
+		CopyObjectList(copiedData);
+		return true;
+	}
+
+	std::int32_t TESContainer::RemoveObjectInstancesFromContainer(TESBoundObject* a_object)
+	{
+		// Copy the container data
+		std::vector<ContainerObject*> copiedData{ containerObjects, containerObjects + numContainerObjects };
+
+		// Use std::remove_if to remove all instances of a_object
+		copiedData.erase(std::remove_if(copiedData.begin(), copiedData.end(),
+							 [a_object](ContainerObject* obj) { return obj->obj == a_object; }),
+			copiedData.end());
+
+		// Copy the modified container back to the original
+		CopyObjectList(copiedData);
+
+		// Indicate whether any elements were removed
+		return (copiedData.size() < numContainerObjects);
+	}
+
+	bool TESContainer::RemoveObjectFromContainerByKeyword(BGSKeyword* a_keyword)
+	{
+		// Copy the container data
+		std::vector<ContainerObject*> copiedData{ containerObjects, containerObjects + numContainerObjects };
+
+		// Use std::remove_if to remove all instances of a_object
+		copiedData.erase(std::remove_if(copiedData.begin(), copiedData.end(),
+							 [a_keyword](ContainerObject* obj) {
+								 if (obj->obj && obj->obj->As<BGSKeywordForm>()) {
+									 return obj->obj->As<BGSKeywordForm>()->HasKeyword(a_keyword);
+								 }
+								 return false;
+							 }),
+			copiedData.end());
+
+		// Copy the modified container back to the original
+		CopyObjectList(copiedData);
+
+		// Indicate whether any elements were removed
+
+		return (copiedData.size() < numContainerObjects);
+	}
+
+	bool TESContainer::ReplaceObjectInContainer(TESBoundObject* oldObject, TESBoundObject* newObject)
+	{
+		if (!oldObject || !newObject || oldObject == newObject)
+			return false;
+
+		bool replaced = false;
+
+		for (std::uint32_t i = 0; i < numContainerObjects; ++i) {
+			auto entry = containerObjects[i];
+			if (entry && entry->obj == oldObject) {
+				entry->obj = newObject;
+				replaced = true;
+			}
+		}
+
+		return replaced;
+	}
+
+	bool TESContainer::ChangeCOBJsCountByMult(TESBoundObject* oldObject, float multiplier)
+	{
+		if (multiplier <= 0.0f)
+			return false;
+
+		bool changed = false;
+
+		for (std::uint32_t i = 0; i < numContainerObjects; ++i) {
+			auto entry = containerObjects[i];
+			if (!entry || entry->count <= 0)
+				continue;
+
+			if (!oldObject || entry->obj == oldObject) {
+				entry->count = static_cast<std::int32_t>(std::ceil(entry->count * multiplier));
+
+				// Fallback: niemals unter 1, falls ceil kleiner als 1 ergibt
+				if (entry->count < 1)
+					entry->count = 1;
+
+				changed = true;
+
+			}
+		}
+
+		return changed;
+	}
+
+	bool TESContainer::ChangeCOBJsCount(TESBoundObject* oldObject, int32_t newCount)
+	{
+		bool changed = false;
+
+		for (std::uint32_t i = 0; i < numContainerObjects; ++i) {
+			auto entry = containerObjects[i];
+			if (!entry || entry->count <= 0)
+				continue;
+
+			if (!oldObject || entry->obj == oldObject) {
+				entry->count = newCount;
+
+				changed = true;
+			}
+		}
+
+		return changed;
+	}
+
+}

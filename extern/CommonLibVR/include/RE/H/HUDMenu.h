@@ -1,0 +1,133 @@
+#pragma once
+
+#include "RE/B/BSTArray.h"
+#include "RE/B/BSTEvent.h"
+#include "RE/G/GFxValue.h"
+#include "RE/I/IMenu.h"
+#ifdef SKYRIMVR
+#	include "RE/W/WorldSpaceMenu.h"
+#endif
+
+namespace RE
+{
+	class ActorValueMeter;
+	class HUDObject;
+	class ShoutMeter;
+	class UserEventEnabledEvent;
+	struct BSRemoteGamepadEvent;
+
+#ifndef SKYRIMVR
+	// menuDepth = 2
+	// flags = kAlwaysOpen | kRequiresUpdate | kAllowSaving | kCustomRendering | kAssignCursorToRenderer
+	// context = kNone
+	class HUDMenu :
+		public IMenu,                                // 00
+		public BSTEventSink<UserEventEnabledEvent>,  // 30
+		public BSTEventSink<BSRemoteGamepadEvent>    // 38
+	{
+	public:
+		inline static constexpr auto      RTTI = RTTI_HUDMenu;
+		inline static constexpr auto      VTABLE = VTABLE_HUDMenu;
+		constexpr static std::string_view MENU_NAME = "HUD Menu";
+
+		~HUDMenu() override;  // 00
+
+		// override (IMenu)
+		void               Accept(CallbackProcessor* a_processor) override;                       // 01
+		UI_MESSAGE_RESULTS ProcessMessage(UIMessage& a_message) override;                         // 04
+		void               AdvanceMovie(float a_interval, std::uint32_t a_currentTime) override;  // 05
+		void               RefreshPlatform() override;                                            // 08
+
+		// override (BSTEventSink<UserEventEnabledEvent>)
+		BSEventNotifyControl ProcessEvent(const UserEventEnabledEvent* a_event, BSTEventSource<UserEventEnabledEvent>* a_eventSource) override;  // 01
+
+		// override (BSTEventSink<BSRemoteGamepadEvent>)
+		BSEventNotifyControl ProcessEvent(const BSRemoteGamepadEvent* a_event, BSTEventSource<BSRemoteGamepadEvent>* a_eventSource) override;  // 01
+
+		static void FlashMeter(ActorValue a_actorValue)
+		{
+			using func_t = decltype(&HUDMenu::FlashMeter);
+			static REL::Relocation<func_t> func{ RELOCATION_ID(51907, 52845) };
+			return func(a_actorValue);
+		}
+
+		static void UpdateCrosshairMagicTarget(bool a_valid)
+		{
+			using func_t = decltype(&HUDMenu::UpdateCrosshairMagicTarget);
+			static REL::Relocation<func_t> func{ RELOCATION_ID(50738, 51633) };
+			return func(a_valid);
+		}
+
+		// members
+		BSTArray<HUDObject*> objects;  // 40
+		ActorValueMeter*     health;   // 58
+		ActorValueMeter*     stamina;  // 60
+		ActorValueMeter*     magicka;  // 68
+		ShoutMeter*          shout;    // 70
+		GFxValue             root;     // 78 - kDisplayObject - "_level0.HUDMovieBaseInstance"
+		std::uint64_t        unk90;    // 90
+	private:
+		KEEP_FOR_RE()
+	};
+	static_assert(sizeof(HUDMenu) == 0x98);
+#else
+	class HUDMenu :
+		public WorldSpaceMenu,                       // 00
+		public BSTEventSink<UserEventEnabledEvent>,  // 58
+		public BSTEventSink<BSRemoteGamepadEvent>    // 60
+	{
+	public:
+		inline static constexpr auto      RTTI = RTTI_HUDMenu;
+		constexpr static std::string_view MENU_NAME = "HUD Menu";
+
+		~HUDMenu() override;  // 00
+
+		// override (IMenu)
+		void               Accept(CallbackProcessor* a_processor) override;                       // 01
+		UI_MESSAGE_RESULTS ProcessMessage(UIMessage& a_message) override;                         // 04
+		void               AdvanceMovie(float a_interval, std::uint32_t a_currentTime) override;  // 05
+		void               RefreshPlatform() override;                                            // 08
+
+		// override (WorldSpaceMenu)
+		void        SetupMenuNode() override;      // 0B
+		RE::NiNode* GetMenuParentNode() override;  // 0C
+		void        SetTransform() override;       // 0D
+
+		// override (BSTEventSink<HudModeChangeEvent>)
+		BSEventNotifyControl ProcessEvent(const HudModeChangeEvent* a_event, BSTEventSource<HudModeChangeEvent>* a_eventSource) override;  // 01
+
+		// override (BSTEventSink<UserEventEnabledEvent>)
+		BSEventNotifyControl ProcessEvent(const UserEventEnabledEvent* a_event, BSTEventSource<UserEventEnabledEvent>* a_eventSource) override;  // 01
+
+		// override (BSTEventSink<BSRemoteGamepadEvent>)
+		BSEventNotifyControl ProcessEvent(const BSRemoteGamepadEvent* a_event, BSTEventSource<BSRemoteGamepadEvent>* a_eventSource) override;  // 01
+
+		static void FlashMeter(ActorValue a_actorValue)
+		{
+			using func_t = decltype(&HUDMenu::FlashMeter);
+			REL::Relocation<func_t> func{ RELOCATION_ID(51907, 52845) };
+			return func(a_actorValue);
+		}
+
+		static void UpdateCrosshairMagicTarget(bool a_valid)
+		{
+			using func_t = decltype(&HUDMenu::UpdateCrosshairMagicTarget);
+			REL::Relocation<func_t> func{ RELOCATION_ID(50738, 51633) };
+			return func(a_valid);
+		}
+
+		// members
+		std::uint64_t        pad68;    // 68
+		BSTArray<HUDObject*> objects;  // 70
+		ActorValueMeter*     health;   // 88
+		ActorValueMeter*     stamina;  // 90
+		ActorValueMeter*     magicka;  // 98
+		ShoutMeter*          shout;    // A0
+		GFxValue             root;     // A8 - kDisplayObject - "_level0.HUDMovieBaseInstance"
+		std::uint64_t        unk90;    // C0
+	private:
+		KEEP_FOR_RE()
+	};
+	static_assert(sizeof(HUDMenu) == 0xC8);
+#endif
+}
