@@ -435,15 +435,41 @@ namespace REL
 	class Module
 	{
 	public:
+		enum class Runtime
+		{
+			kSE,
+			kAE
+		};
+
 		[[nodiscard]] static Module& get()
 		{
 			static Module singleton;
 			return singleton;
 		}
 
+		[[nodiscard]] static constexpr Runtime runtime_for(Version a_version) noexcept
+		{
+			return a_version[0] > 1 || (a_version[0] == 1 && a_version[1] >= 6) ?
+			           Runtime::kAE :
+			           Runtime::kSE;
+		}
+
+		[[nodiscard]] static constexpr std::uint32_t legacy_address_library_format_for(Version a_version) noexcept
+		{
+			return runtime_for(a_version) == Runtime::kAE ? 2u : 1u;
+		}
+
+		[[nodiscard]] static constexpr std::string_view address_library_prefix_for(Version a_version) noexcept
+		{
+			return runtime_for(a_version) == Runtime::kAE ? "versionlib-" : "version-";
+		}
+
 		[[nodiscard]] std::uintptr_t base() const noexcept { return _base; }
 		[[nodiscard]] stl::zwstring  filename() const noexcept { return _filename; }
 		[[nodiscard]] Version        version() const noexcept { return _version; }
+		[[nodiscard]] Runtime        runtime() const noexcept { return runtime_for(_version); }
+		[[nodiscard]] bool           is_se() const noexcept { return runtime() == Runtime::kSE; }
+		[[nodiscard]] bool           is_ae() const noexcept { return runtime() == Runtime::kAE; }
 
 		[[nodiscard]] Segment segment(Segment::Name a_segment) const noexcept { return _segments[a_segment]; }
 
@@ -665,11 +691,8 @@ namespace REL
 					return;
 				}
 
-#ifdef SKYRIM_SUPPORT_AE
-				if (format != 2) {
-#else
-				if (format != 1) {
-#endif
+				const auto expectedFormat = Module::legacy_address_library_format_for(Module::get().version());
+				if (format != expectedFormat) {
 					stl::report_and_fail(
 						fmt::format(
 							"Unsupported address library format: {}\n"
@@ -721,14 +744,12 @@ namespace REL
 		void load()
 		{
 			const auto version = Module::get().version();
+			const auto libraryPrefix = Module::address_library_prefix_for(version);
 			const auto filename =
 				stl::utf8_to_utf16(
 					fmt::format(
-#ifdef SKYRIM_SUPPORT_AE
-						"Data/SKSE/Plugins/versionlib-{}.bin"sv,
-#else
-						"Data/SKSE/Plugins/version-{}.bin"sv,
-#endif
+						"Data/SKSE/Plugins/{}{}.bin"sv,
+						libraryPrefix,
 						version.string()))
 					.value_or(L"<unknown filename>"s);
 
@@ -742,11 +763,8 @@ namespace REL
 			const auto v2Filename =
 				stl::utf8_to_utf16(
 					fmt::format(
-#ifdef SKYRIM_SUPPORT_AE
-						"Data/SKSE/Plugins/AddressLibV2/versionlib-{}.bin"sv,
-#else
-						"Data/SKSE/Plugins/AddressLibV2/version-{}.bin"sv,
-#endif
+						"Data/SKSE/Plugins/AddressLibV2/{}{}.bin"sv,
+						libraryPrefix,
 						version.string()))
 					.value_or(L"<unknown filename>"s);
 
@@ -952,6 +970,48 @@ namespace REL
 		std::uint64_t _id{ 0 };
 	};
 
+	class RelocationID
+	{
+	public:
+		constexpr RelocationID() noexcept = default;
+
+		constexpr RelocationID(std::uint64_t a_seID, std::uint64_t a_aeID) noexcept :
+			_seID(a_seID),
+			_aeID(a_aeID)
+		{}
+
+		[[nodiscard]] constexpr std::uint64_t id_for(Version a_version) const noexcept
+		{
+			return Module::runtime_for(a_version) == Module::Runtime::kAE ? _aeID : _seID;
+		}
+
+		[[nodiscard]] std::uint64_t id() const noexcept
+		{
+			return id_for(Module::get().version());
+		}
+
+		[[nodiscard]] std::uintptr_t address() const
+		{
+			return ID(id()).address();
+		}
+
+	private:
+		std::uint64_t _seID{ 0 };
+		std::uint64_t _aeID{ 0 };
+	};
+
+	using VariantID = RelocationID;
+
+	template <class T, class U>
+	[[nodiscard]] auto Relocate(T&& a_se, U&& a_ae)
+		-> std::common_type_t<std::remove_cvref_t<T>, std::remove_cvref_t<U>>
+	{
+		using result_t = std::common_type_t<std::remove_cvref_t<T>, std::remove_cvref_t<U>>;
+		return Module::get().is_ae() ?
+		           static_cast<result_t>(std::forward<U>(a_ae)) :
+		           static_cast<result_t>(std::forward<T>(a_se));
+	}
+
 	template <class T>
 	class Relocation
 	{
@@ -976,7 +1036,15 @@ namespace REL
 			_impl{ a_id.address() }
 		{}
 
+		explicit Relocation(RelocationID a_id) :
+			_impl{ a_id.address() }
+		{}
+
 		explicit Relocation(ID a_id, std::ptrdiff_t a_offset) :
+			_impl{ a_id.address() + a_offset }
+		{}
+
+		explicit Relocation(RelocationID a_id, std::ptrdiff_t a_offset) :
 			_impl{ a_id.address() + a_offset }
 		{}
 
@@ -993,6 +1061,12 @@ namespace REL
 		}
 
 		Relocation& operator=(ID a_id)
+		{
+			_impl = a_id.address();
+			return *this;
+		}
+
+		Relocation& operator=(RelocationID a_id)
 		{
 			_impl = a_id.address();
 			return *this;

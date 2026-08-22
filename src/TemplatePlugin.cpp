@@ -32,10 +32,11 @@ extern "C" __declspec(dllexport) constinit auto SKSEPlugin_Version = []() {
 	version.PluginName(TEMPLATE_PLUGIN_NAME);
 	version.AuthorName(TEMPLATE_PLUGIN_AUTHOR);
 	version.UsesAddressLibrary();
-	version.UsesUpdatedStructs();
+	version.UsesNoStructs();
 	return version;
 }();
-#else
+#endif
+
 extern "C" __declspec(dllexport) bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface* skse, SKSE::PluginInfo* info)
 {
 	if (skse->IsEditor()) {
@@ -47,7 +48,6 @@ extern "C" __declspec(dllexport) bool SKSEAPI SKSEPlugin_Query(const SKSE::Query
 	info->version = 1;
 	return true;
 }
-#endif
 
 extern "C" __declspec(dllexport) bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* skse)
 {

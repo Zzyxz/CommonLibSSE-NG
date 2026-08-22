@@ -709,7 +709,7 @@ namespace REL
 }
 
 #ifdef SKYRIM_SUPPORT_AE
-#	define RELOCATION_ID(SE, AE) REL::ID(AE)
+#	define RELOCATION_ID(SE, AE) REL::RelocationID(SE, AE)
 #else
 #	define RELOCATION_ID(SE, AE) REL::ID(SE)
 #endif
