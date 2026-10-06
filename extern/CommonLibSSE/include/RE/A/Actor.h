@@ -512,6 +512,8 @@ namespace RE
 		void                         EvaluatePackage(bool a_immediate = false, bool a_resetAI = false);
 		TESNPC*                      GetActorBase();
 		const TESNPC*                GetActorBase() const;
+		ActorValueOwner*             GetActorValueOwner() noexcept { return std::addressof(REL::RuntimeMember<ActorValueOwner>(this, 0xB0, 0xB8)); }
+		const ActorValueOwner*       GetActorValueOwner() const noexcept { return std::addressof(REL::RuntimeMember<ActorValueOwner>(this, 0xB0, 0xB8)); }
 		float                        GetActorValueModifier(ACTOR_VALUE_MODIFIER a_modifier, ActorValue a_value) const;
 		float                        GetAimAngle() const;
 		float                        GetAimHeading() const;
@@ -577,7 +579,7 @@ namespace RE
 		bool                         IsGuard() const;
 		bool                         IsHostileToActor(Actor* a_actor);
 		bool                         IsInCastPowerList(SpellItem* a_power);
-		[[nodiscard]] constexpr bool IsInKillMove() const noexcept { return boolFlags.all(BOOL_FLAGS::kIsInKillMove); }
+		[[nodiscard]] bool           IsInKillMove() const noexcept;
 		bool                         IsInMidair() const;
 		bool                         IsInRagdollState() const;
 		bool                         IsLimbGone(std::uint32_t a_limb);

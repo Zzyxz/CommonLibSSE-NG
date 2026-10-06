@@ -20,6 +20,34 @@
 
 namespace RE
 {
+	namespace
+	{
+		BSExtraData*& get_data(ExtraDataList* a_list)
+		{
+			return REL::RuntimeMember<BSExtraData*>(a_list, 0x0, 0x8);
+		}
+
+		BSExtraData* get_data(const ExtraDataList* a_list)
+		{
+			return REL::RuntimeMember<BSExtraData*>(a_list, 0x0, 0x8);
+		}
+
+		BaseExtraList::PresenceBitfield*& get_presence(ExtraDataList* a_list)
+		{
+			return REL::RuntimeMember<BaseExtraList::PresenceBitfield*>(a_list, 0x8, 0x10);
+		}
+
+		BaseExtraList::PresenceBitfield* get_presence(const ExtraDataList* a_list)
+		{
+			return REL::RuntimeMember<BaseExtraList::PresenceBitfield*>(a_list, 0x8, 0x10);
+		}
+
+		BSReadWriteLock& get_lock(const ExtraDataList* a_list)
+		{
+			return REL::RuntimeMember<BSReadWriteLock>(const_cast<ExtraDataList*>(a_list), 0x10, 0x18);
+		}
+	}
+
 #ifndef SKYRIM_SUPPORT_AE
 	BaseExtraList::~BaseExtraList()
 	{
@@ -59,12 +87,12 @@ namespace RE
 
 	ExtraDataList::iterator ExtraDataList::begin()
 	{
-		return iterator(_extraData.data);
+		return iterator(get_data(this));
 	}
 
 	ExtraDataList::const_iterator ExtraDataList::cbegin() const
 	{
-		return const_iterator(_extraData.data);
+		return const_iterator(get_data(this));
 	}
 
 	ExtraDataList::const_iterator ExtraDataList::begin() const
@@ -89,8 +117,9 @@ namespace RE
 
 	bool ExtraDataList::HasType(ExtraDataType a_type) const
 	{
-		BSReadLockGuard locker(_lock);
-		return _extraData.presence != nullptr && _extraData.presence->HasType(static_cast<std::uint32_t>(a_type));
+		BSReadLockGuard locker(get_lock(this));
+		auto* presence = get_presence(this);
+		return presence != nullptr && presence->HasType(static_cast<std::uint32_t>(a_type));
 	}
 
 	BSExtraData* ExtraDataList::GetByType(ExtraDataType a_type)
@@ -105,7 +134,7 @@ namespace RE
 
 	bool ExtraDataList::Remove(ExtraDataType a_type, BSExtraData* a_toRemove)
 	{
-		BSWriteLockGuard locker(_lock);
+		BSWriteLockGuard locker(get_lock(this));
 
 		if (!a_toRemove) {
 			return false;
@@ -113,11 +142,12 @@ namespace RE
 
 		bool removed = false;
 
-		if (_extraData.data == a_toRemove) {
-			_extraData.data = _extraData.data->next;
+		auto& data = get_data(this);
+		if (data == a_toRemove) {
+			data = data->next;
 			removed = true;
 		} else {
-			for (auto iter = _extraData.data; iter; iter = iter->next) {
+			for (auto iter = data; iter; iter = iter->next) {
 				if (iter->next == a_toRemove) {
 					iter->next = a_toRemove->next;
 					removed = true;
@@ -135,23 +165,24 @@ namespace RE
 
 	bool ExtraDataList::RemoveByType(ExtraDataType a_type)
 	{
-		BSWriteLockGuard locker(_lock);
+		BSWriteLockGuard locker(get_lock(this));
+		auto& data = get_data(this);
 
-		if (!_extraData.data) {
+		if (!data) {
 			return false;
 		}
 
 		bool removed = false;
 
-		while (_extraData.data->GetType() == a_type) {
-			auto tmp = _extraData.data;
-			_extraData.data = _extraData.data->next;
+		while (data->GetType() == a_type) {
+			auto tmp = data;
+			data = data->next;
 			delete tmp;
 			removed = true;
 		}
 
-		auto prev = _extraData.data;
-		for (auto cur = _extraData.data->next; cur; cur = cur->next) {
+		auto prev = data;
+		for (auto cur = data->next; cur; cur = cur->next) {
 			if (cur->GetType() == a_type) {
 				prev->next = cur->next;
 				delete cur;
@@ -236,7 +267,7 @@ namespace RE
 
 	TESObjectREFR* ExtraDataList::GetLinkedRef(BGSKeyword* a_keyword)
 	{
-		BSReadLockGuard locker(_lock);
+		BSReadLockGuard locker(get_lock(this));
 
 		auto xLinkedRef = GetByType<ExtraLinkedRef>();
 		if (!xLinkedRef) {
@@ -366,13 +397,13 @@ namespace RE
 
 	BSExtraData* ExtraDataList::GetByTypeImpl(ExtraDataType a_type) const
 	{
-		BSReadLockGuard locker(_lock);
+		BSReadLockGuard locker(get_lock(this));
 
 		if (!HasType(a_type)) {
 			return nullptr;
 		}
 
-		for (auto iter = _extraData.data; iter; iter = iter->next) {
+		for (auto iter = get_data(this); iter; iter = iter->next) {
 			if (iter->GetType() == a_type) {
 				return iter;
 			}
@@ -383,7 +414,7 @@ namespace RE
 
 	void ExtraDataList::MarkType(std::uint32_t a_type, bool a_cleared)
 	{
-		_extraData.presence->MarkType(a_type, a_cleared);
+		get_presence(this)->MarkType(a_type, a_cleared);
 	}
 
 	void ExtraDataList::MarkType(ExtraDataType a_type, bool a_cleared)

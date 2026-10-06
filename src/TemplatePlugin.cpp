@@ -25,13 +25,14 @@ namespace
 	}
 }
 
-#ifndef SKYRIMVR
+#ifdef SKYRIM_SUPPORT_AE
 extern "C" __declspec(dllexport) constinit auto SKSEPlugin_Version = []() {
 	SKSE::PluginVersionData version;
 	version.PluginVersion(1);
 	version.PluginName(TEMPLATE_PLUGIN_NAME);
 	version.AuthorName(TEMPLATE_PLUGIN_AUTHOR);
 	version.UsesAddressLibrary();
+	version.UsesAddressLibraryV5();
 	version.UsesNoStructs();
 	return version;
 }();
@@ -54,7 +55,5 @@ extern "C" __declspec(dllexport) bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadIn
 	initialize_log();
 	SKSE::Init(skse);
 	logger::info("{} loaded for runtime {}.", TEMPLATE_PLUGIN_NAME, skse->RuntimeVersion().string());
-
-	// Add message listeners, hooks, and REL::ID relocations here.
 	return true;
 }

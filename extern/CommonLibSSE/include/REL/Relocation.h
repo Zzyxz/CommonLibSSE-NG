@@ -1009,7 +1009,22 @@ namespace REL
 		using result_t = std::common_type_t<std::remove_cvref_t<T>, std::remove_cvref_t<U>>;
 		return Module::get().is_ae() ?
 		           static_cast<result_t>(std::forward<U>(a_ae)) :
-		           static_cast<result_t>(std::forward<T>(a_se));
+			           static_cast<result_t>(std::forward<T>(a_se));
+	}
+
+	template <class T, class U>
+	[[nodiscard]] T& RuntimeMember(U* a_object, std::ptrdiff_t a_seOffset, std::ptrdiff_t a_aeOffset) noexcept
+		requires(!std::is_const_v<U>)
+	{
+		const auto address = reinterpret_cast<std::uintptr_t>(a_object) + Relocate(a_seOffset, a_aeOffset);
+		return *reinterpret_cast<T*>(address);
+	}
+
+	template <class T, class U>
+	[[nodiscard]] const T& RuntimeMember(const U* a_object, std::ptrdiff_t a_seOffset, std::ptrdiff_t a_aeOffset) noexcept
+	{
+		const auto address = reinterpret_cast<std::uintptr_t>(a_object) + Relocate(a_seOffset, a_aeOffset);
+		return *reinterpret_cast<const T*>(address);
 	}
 
 	template <class T>

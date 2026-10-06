@@ -368,6 +368,7 @@ namespace SKSE
 		enum
 		{
 			kVersionIndependentEx_NoStructUse = 1 << 0,
+			kVersionIndependentEx_AddressLibraryV5 = 1 << 1,
 		};
 
 		constexpr void AuthorEmail(std::string_view a_email) noexcept { SetCharBuffer(a_email, std::span{ supportEmail }); }
@@ -391,6 +392,7 @@ namespace SKSE
 		constexpr void UsesUpdatedStructs() noexcept { versionIndependence |= kVersionIndependent_StructsPost629; }
 
 		constexpr void UsesNoStructs() noexcept { versionIndependenceEx |= kVersionIndependentEx_NoStructUse; }
+		constexpr void UsesAddressLibraryV5() noexcept { versionIndependenceEx |= kVersionIndependentEx_AddressLibraryV5; }
 
 		const std::uint32_t dataVersion{ kVersion };
 		std::uint32_t       pluginVersion = 0;

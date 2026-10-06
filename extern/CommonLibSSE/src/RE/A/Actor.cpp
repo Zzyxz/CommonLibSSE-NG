@@ -385,15 +385,21 @@ namespace RE
 
 	TESForm* Actor::GetEquippedObject(bool a_leftHand) const
 	{
-		if (currentProcess) {
+		auto* process = REL::RuntimeMember<AIProcess*>(this, 0xF0, 0xF8);
+		if (process) {
 			if (a_leftHand) {
-				return currentProcess->GetEquippedLeftHand();
+				return process->GetEquippedLeftHand();
 			} else {
-				return currentProcess->GetEquippedRightHand();
+				return process->GetEquippedRightHand();
 			}
 		} else {
 			return nullptr;
 		}
+	}
+
+	bool Actor::IsInKillMove() const noexcept
+	{
+		return REL::RuntimeMember<stl::enumeration<BOOL_FLAGS, std::uint32_t>>(this, 0x1FC, 0x204).all(BOOL_FLAGS::kIsInKillMove);
 	}
 
 	float Actor::GetEquippedWeight()
@@ -701,7 +707,7 @@ namespace RE
 
 	bool Actor::IsAMount() const
 	{
-		return boolFlags.all(BOOL_FLAGS::kIsAMount);
+		return REL::RuntimeMember<stl::enumeration<BOOL_FLAGS, std::uint32_t>>(this, 0x1FC, 0x204).all(BOOL_FLAGS::kIsAMount);
 	}
 
 	bool Actor::IsAnimationDriven() const
