@@ -168,9 +168,10 @@ namespace RE
 
 		void ObjectTypeInfo::ReleaseData()
 		{
-			using func_t = decltype(&ObjectTypeInfo::ReleaseData);
+			// The engine function takes a second flag; its own destructor passes false.
+			using func_t = void(ObjectTypeInfo*, bool);
 			REL::Relocation<func_t> func{ RELOCATION_ID(97538, 104323) };
-			return func(this);
+			return func(this, false);
 		}
 	}
 }
