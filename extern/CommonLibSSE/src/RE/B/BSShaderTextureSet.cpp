@@ -13,7 +13,7 @@ namespace RE
 	{
 #ifdef SKYRIM_SUPPORT_AE
 		using func_t = decltype(&BSShaderTextureSet::Create);
-		REL::Relocation<func_t> func{ REL::ID(107172) };
+		REL::Relocation<func_t> func{ RELOCATION_ID(100451, 107172) };
 		return func();
 #else
 		auto textureset = malloc<BSShaderTextureSet>();

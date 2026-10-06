@@ -100,21 +100,21 @@ namespace RE
 		bool SetGraphVariableBool(const BSFixedString& a_variableName, const bool a_in)
 		{
 			using func_t = decltype(&BShkbAnimationGraph::SetGraphVariableBool);
-			REL::Relocation<func_t> func{ RELOCATION_ID(63609, 62708) };
+			REL::Relocation<func_t> func{ RELOCATION_ID(62710, 63607) };
 			return func(this, a_variableName, a_in);
 		}
 
 		bool SetGraphVariableFloat(const BSFixedString& a_variableName, const float a_in)
 		{
 			using func_t = decltype(&BShkbAnimationGraph::SetGraphVariableFloat);
-			REL::Relocation<func_t> func{ RELOCATION_ID(63608, 62709) };
+			REL::Relocation<func_t> func{ RELOCATION_ID(62709, 63608) };
 			return func(this, a_variableName, a_in);
 		}
 
 		bool SetGraphVariableInt(const BSFixedString& a_variableName, const int a_in)
 		{
 			using func_t = decltype(&BShkbAnimationGraph::SetGraphVariableInt);
-			REL::Relocation<func_t> func{ RELOCATION_ID(63607, 62710) };
+			REL::Relocation<func_t> func{ RELOCATION_ID(62708, 63609) };
 			return func(this, a_variableName, a_in);
 		}
 

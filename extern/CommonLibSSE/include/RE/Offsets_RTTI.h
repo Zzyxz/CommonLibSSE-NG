@@ -4825,7 +4825,7 @@ namespace RE
 	inline constexpr REL::RelocationID RTTI_FxResponseArgsBase{ 688793, 396645 };
 	inline constexpr REL::RelocationID RTTI_FxResponseArgsList{ 688794, 396646 };
 	inline constexpr REL::RelocationID RTTI_FxResponseArgs_0_{ 688798, 396650 };
-	inline constexpr REL::RelocationID RTTI_FxResponseArgs_12_{ 0, 396733 };
+	inline constexpr REL::RelocationID RTTI_FxResponseArgs_12_{ 0, 0 };
 	inline constexpr REL::RelocationID RTTI_FxResponseArgs_13_{ 688915, 396770 };
 	inline constexpr REL::RelocationID RTTI_FxResponseArgs_1_{ 688799, 396651 };
 	inline constexpr REL::RelocationID RTTI_FxResponseArgs_2_{ 688797, 396649 };

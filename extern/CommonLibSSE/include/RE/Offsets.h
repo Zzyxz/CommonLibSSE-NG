@@ -116,7 +116,7 @@ namespace RE
 
 		namespace BSScaleformTranslator
 		{
-			inline constexpr REL::RelocationID GetCachedString(67844, 69188);
+			inline constexpr REL::RelocationID GetCachedString(67844, 443410);
 		}
 
 		namespace BSScript
@@ -151,7 +151,7 @@ namespace RE
 
 		namespace BSString
 		{
-			inline constexpr REL::RelocationID Set_CStr(10979, 11044);
+			inline constexpr REL::RelocationID Set_CStr(10979, 439876);
 		}
 
 		namespace BucketTable
@@ -171,7 +171,7 @@ namespace RE
 
 		namespace Console
 		{
-			inline constexpr REL::RelocationID SelectedRef(519394, 405935);
+			inline constexpr REL::RelocationID SelectedRef(519394, 504099);
 			inline constexpr REL::RelocationID SetSelectedRef(50164, 51093);
 		}
 
@@ -335,7 +335,7 @@ namespace RE
 		{
 			inline constexpr REL::RelocationID GetNextUniqueID(15908, 16148);
 			inline constexpr REL::RelocationID SendContainerChangedEvent(15909, 16149);
-			inline constexpr REL::RelocationID SetUniqueID(15907, 16149);
+			inline constexpr REL::RelocationID SetUniqueID(15907, 16147);
 			inline constexpr REL::RelocationID TransferItemUID(15909, 16149);
 		}
 
@@ -473,7 +473,7 @@ namespace RE
 
 		namespace Script
 		{
-			inline constexpr REL::RelocationID CompileAndRun(21416, 21890);
+			inline constexpr REL::RelocationID CompileAndRun(21416, 441582);
 			inline constexpr REL::RelocationID GetProcessScripts(21436, 21921);
 			inline constexpr REL::RelocationID SetProcessScripts(21435, 21920);
 		}
