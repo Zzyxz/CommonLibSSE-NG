@@ -10,8 +10,8 @@ namespace REL
 	//
 	// The owner function is located through the Address Library, its code range comes from the
 	// game's .pdata (including split parts linked through chained unwind info), and only that range
-	// is searched. Address Library IDs are the same on every AE version, so one owner/target pair
-	// covers all AE releases; RelocationID adds the SE pair.
+	// is searched. Most AE ids stay valid across AE versions, but some were renumbered in 1.6.1130
+	// (use REL::AESplitID for those); RelocationID adds the SE id.
 	//
 	// The search is a byte scan for E8/E9 rel32 whose destination is the target; it does not decode
 	// instructions. Prefer the UNIQUE form, which fails on more than one hit, and check the found
@@ -29,10 +29,15 @@ namespace REL
 			_id(a_id)
 		{}
 
-		[[nodiscard]] std::uint64_t id() const noexcept { return _id.id(); }
+		constexpr CallsiteID(AESplitID a_id) noexcept :
+			_split(a_id)
+		{}
+
+		[[nodiscard]] std::uint64_t id() const noexcept { return _split ? _split->id() : _id.id(); }
 
 	private:
-		RelocationID _id;
+		RelocationID             _id;
+		std::optional<AESplitID> _split;
 	};
 
 	enum class AutoCallsiteBranch : std::uint8_t

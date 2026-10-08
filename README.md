@@ -15,9 +15,11 @@ The template builds against `extern/CommonLibSSE`, which is CommonLibSSE NG 3.7.
 The example plugin is `src/TemplatePlugin.cpp`. It exports the SE and AE entry points, checks for the Address Library before `SKSE::Init`, and writes a log. Set the name and author, then build out of tree:
 
 ```powershell
-cmake -S . -B build -DPLUGIN_NAME=MyPlugin -DPLUGIN_AUTHOR=YourName -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows-static
+cmake -S . -B build -DPLUGIN_NAME=MyPlugin -DPLUGIN_AUTHOR=YourName -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
 cmake --build build --config Release
 ```
+
+The build links the MSVC runtime and the vcpkg dependencies statically (`x64-windows-static`), so the DLL has no extra runtime dependencies. Override `VCPKG_TARGET_TRIPLET` and `CMAKE_MSVC_RUNTIME_LIBRARY` together if you need the DLL runtime.
 
 `SKYRIM_VARIANT` selects the runtimes:
 
@@ -79,9 +81,22 @@ Compared with CommonLibSSE NG 3.7.0 (commit `b93280e8`):
 - Skyrim 1.7 is detected as AE. NG treated every version other than 1.4 and 1.6 as SE.
 - `IDDatabase::id2offset` requires an exact id match. Before, an id missing from the library silently returned the next id's address on SE and AE. `try_id2offset` returns no value instead of failing.
 - `ControlMap`, `TES`, `InterfaceStrings`, `CombatController` and `BGSSaveLoadManager` select their AE layout at runtime (`GetRuntimeData()`). NG checked a macro it never defines, so these classes always had the SE layout. `ControlMap` also maps `kFavor` to the game's index on AE.
-- Corrected Address Library ids, checked in IDA against 1.5.97 and 1.6.1170: the `BShkbAnimationGraph` variable setters, `BSShaderTextureSet::Create` on SE, `InventoryChanges::SetUniqueID`, `ObjectTypeInfo::ReleaseData` (which also takes a flag), two `MovementMessageFreezeDirection` vtables and `FxResponseArgs<12>`. Five functions got new AE ids in 1.6.1130 (`GetCachedString`, `Set_CStr`, `Console::SelectedRef`, `Script::CompileAndRun`, `InventoryChanges::RemoveAllItems`); `REL::AESplitID` picks the id for the running version.
-- Runtime constants for 1.6.1130, 1.6.1170, 1.7.99 and 1.7.104. `RUNTIME_SSE_1_6_1330` held 1.5.1330 and is deprecated.
+- Corrected Address Library ids, checked in IDA against 1.5.97 and 1.6.1170: the `BShkbAnimationGraph` variable setters, the SE id of `BSShaderTextureSet::Create`, `InventoryChanges::SetUniqueID`, `ObjectTypeInfo::ReleaseData` (which also takes a flag), two `MovementMessageFreezeDirection` vtables and `FxResponseArgs<12>`. Five functions got new AE ids in 1.6.1130 (`GetCachedString`, `Set_CStr`, `Console::SelectedRef`, `Script::CompileAndRun`, `InventoryChanges::RemoveAllItems`); `REL::AESplitID` picks the id for the running version.
+- Runtime constants for 1.6.1130, 1.6.1170, 1.6.1179, 1.7.99 and 1.7.104. `RUNTIME_SSE_1_6_1330` (value 1.5.1330, no such game version) is deprecated.
 - Additions: `REL/Callsite.h`, `REL::RuntimeMember`, `REL::Module::RuntimeFor` and `AddressLibraryFileName`, `PluginVersionData::UsesAddressLibraryV5` and `UsesUpdatedStructs`.
+
+## Known limits
+
+- Universal builds cover SE and AE. VR is a separate build (`SKYRIM_VARIANT=VR`).
+- Some AE ids from NG 3.7.0 are missing from newer Address Libraries. A plugin that calls one of these functions stops with an error on those versions:
+  - `TES::GetWaterHeight` (13358) on 1.7
+  - `Renderer::RequestWindowResize` (77235) on 1.6.1179 and 1.7
+  - `BSScaleformManager::IsValidName` (82331) on 1.7
+  - `BSScaleformExternalTexture::ReleaseTexture` (82317) from 1.6.1130 on
+  - many vtables of Creation Club, ModManager and BSPlatform classes from 1.6.1130 on
+- The AE layouts behind `GetRuntimeData()` of `ControlMap`, `TES`, `InterfaceStrings`, `CombatController` and `BGSSaveLoadManager` were checked in IDA on 1.6.1170 and 1.7.104, not on AE versions before 1.6.629.
+- `IMenu::inputContext` and `ControlMap`'s `contextPriorityStack` hold the game's context index. On AE every context from `kFavor` on is one higher than `UserEvents::INPUT_CONTEXT_ID`; use `ControlMap::ToGameContext` when you compare or set them.
+- `PluginVersionData::UsesAddressLibraryV5` sets bit 1 of `versionIndependenceEx`, as the previous template did. It has not been checked against SKSE's `PluginAPI.h`.
 
 ## License
 

@@ -65,62 +65,72 @@ namespace RE
 		BSFixedString creditsMenu;             // 188 - "Credits Menu"
 		BSFixedString modManagerMenu;          // 190 - "Mod Manager Menu"
 		BSFixedString creationClubMenu;        // 198 - "Creation Club Menu"
-		// AE inserts "Marketplace Menu" at 0x1A0 and two strings after menuTextureDegradeEvent, so the strings
-		// from titleSequenceMenu on lie 8 bytes later, diamondMarker 0x18 bytes later.
+		// AE (1.6 and 1.7, verified in IDA from the constructor) inserts "Login Menu" (0x1A0) and
+		// "Marketplace Menu" (0x1A8), so titleSequenceMenu .. cancelLoading lie 0x10 bytes later. After
+		// cancelLoading AE stores "UserSettingsLoaded" (0x260) and "ActivityStarted" (0x268), then
+		// menuTextureDegradeEvent (SE 0x250, AE 0x270) and diamondMarker (SE 0x258, AE 0x278).
 		struct RUNTIME_DATA
 		{
 #define RUNTIME_DATA_CONTENT \
-	BSFixedString titleSequenceMenu; /* 1A0, 1A8 - "TitleSequence Menu" */               \
-	BSFixedString consoleNativeUIMenu; /* 1A8, 1B0 - "Console Native UI Menu" */         \
-	BSFixedString kinectMenu; /* 1B0, 1B8 - "Kinect Menu" */                             \
-	BSFixedString loadWaitSpinner; /* 1B8, 1C0 - "LoadWaitSpinner" */                    \
-	BSFixedString streamingInstallMenu; /* 1C0, 1C8 - "StreamingInstallMenu" */          \
-	BSFixedString textWidget; /* 1C8, 1D0 - "TextWidget" */                              \
-	BSFixedString buttonBarWidget; /* 1D0, 1D8 - "ButtonBarWidget" */                    \
-	BSFixedString graphWidget; /* 1D8, 1E0 - "GraphWidget" */                            \
-	BSFixedString textureWidget; /* 1E0, 1E8 - "TextureWidget" */                        \
-	BSFixedString uiMenuOK; /* 1E8, 1F0 - "UIMenuOK" */                                  \
-	BSFixedString uiMenuCancel; /* 1F0, 1F8 - "UIMenuCancel" */                          \
-	BSFixedString showText; /* 1F8, 200 - "Show Text" */                                 \
-	BSFixedString hideText; /* 200, 208 - "Hide Text" */                                 \
-	BSFixedString showList; /* 208, 210 - "Show List" */                                 \
-	BSFixedString voiceReady; /* 210, 218 - "Voice Ready" */                             \
-	BSFixedString dmfoStr; /* 218, 220 - "DMFOStr" */                                    \
-	BSFixedString showJournal; /* 220, 228 - "Show Journal" */                           \
-	BSFixedString journalSettingsSaved; /* 228, 230 - "Journal Settings Saved" */        \
-	BSFixedString closeMenu; /* 230, 238 - "CloseMenu" */                                \
-	BSFixedString closingAllMenus; /* 238, 240 - "Closing All Menus" */                  \
-	BSFixedString refreshMenu; /* 240, 248 - "RefreshMenu" */                            \
-	BSFixedString cancelLoading; /* 248, 250 - "CancelLoading" */                        \
-	BSFixedString menuTextureDegradeEvent; /* 250, 258 - "Menu Texture Degrade Event" */
+	BSFixedString titleSequenceMenu; /* 1A0, 1B0 - "TitleSequence Menu" */        \
+	BSFixedString consoleNativeUIMenu; /* 1A8, 1B8 - "Console Native UI Menu" */  \
+	BSFixedString kinectMenu; /* 1B0, 1C0 - "Kinect Menu" */                      \
+	BSFixedString loadWaitSpinner; /* 1B8, 1C8 - "LoadWaitSpinner" */             \
+	BSFixedString streamingInstallMenu; /* 1C0, 1D0 - "StreamingInstallMenu" */   \
+	BSFixedString textWidget; /* 1C8, 1D8 - "TextWidget" */                       \
+	BSFixedString buttonBarWidget; /* 1D0, 1E0 - "ButtonBarWidget" */             \
+	BSFixedString graphWidget; /* 1D8, 1E8 - "GraphWidget" */                     \
+	BSFixedString textureWidget; /* 1E0, 1F0 - "TextureWidget" */                 \
+	BSFixedString uiMenuOK; /* 1E8, 1F8 - "UIMenuOK" */                           \
+	BSFixedString uiMenuCancel; /* 1F0, 200 - "UIMenuCancel" */                   \
+	BSFixedString showText; /* 1F8, 208 - "Show Text" */                          \
+	BSFixedString hideText; /* 200, 210 - "Hide Text" */                          \
+	BSFixedString showList; /* 208, 218 - "Show List" */                          \
+	BSFixedString voiceReady; /* 210, 220 - "Voice Ready" */                      \
+	BSFixedString dmfoStr; /* 218, 228 - "DMFOStr" */                             \
+	BSFixedString showJournal; /* 220, 230 - "Show Journal" */                    \
+	BSFixedString journalSettingsSaved; /* 228, 238 - "Journal Settings Saved" */ \
+	BSFixedString closeMenu; /* 230, 240 - "CloseMenu" */                         \
+	BSFixedString closingAllMenus; /* 238, 248 - "Closing All Menus" */           \
+	BSFixedString refreshMenu; /* 240, 250 - "RefreshMenu" */                     \
+	BSFixedString cancelLoading; /* 248, 258 - "CancelLoading" */
 
 			RUNTIME_DATA_CONTENT
 		};
-		static_assert(sizeof(RUNTIME_DATA) == 0xB8);
+		static_assert(sizeof(RUNTIME_DATA) == 0xB0);
 
 		[[nodiscard]] RUNTIME_DATA& GetRuntimeData() noexcept
 		{
-			return REL::RuntimeMember<RUNTIME_DATA>(this, 0x1A0, 0x1A8);
+			return REL::RuntimeMember<RUNTIME_DATA>(this, 0x1A0, 0x1B0);
 		}
 
 		[[nodiscard]] const RUNTIME_DATA& GetRuntimeData() const noexcept
 		{
-			return REL::RuntimeMember<RUNTIME_DATA>(this, 0x1A0, 0x1A8);
+			return REL::RuntimeMember<RUNTIME_DATA>(this, 0x1A0, 0x1B0);
 		}
 
-		// "Marketplace Menu", "UserSettingsLoaded", "ActivityStarted": AE only, nullptr on SE.
-		[[nodiscard]] const BSFixedString* GetMarketplaceMenu() const noexcept { return GetAEOnly(0x1A0); }
+		// "Login Menu", "Marketplace Menu", "UserSettingsLoaded", "ActivityStarted": AE only, nullptr on SE.
+		[[nodiscard]] const BSFixedString* GetLoginMenu() const noexcept { return GetAEOnly(0x1A0); }
+		[[nodiscard]] const BSFixedString* GetMarketplaceMenu() const noexcept { return GetAEOnly(0x1A8); }
 		[[nodiscard]] const BSFixedString* GetUserSettingsLoaded() const noexcept { return GetAEOnly(0x260); }
 		[[nodiscard]] const BSFixedString* GetActivityStarted() const noexcept { return GetAEOnly(0x268); }
 
+		// "Menu Texture Degrade Event"
+		[[nodiscard]] const BSFixedString& GetMenuTextureDegradeEvent() const noexcept
+		{
+			return REL::RuntimeMember<BSFixedString>(this, 0x250, 0x270);
+		}
+
+		// "<img src='DiamondMarker' width='10' height='15' align='baseline' vspace='5'>"
 		[[nodiscard]] const BSFixedString& GetDiamondMarker() const noexcept
 		{
-			return REL::RuntimeMember<BSFixedString>(this, 0x258, 0x270);
+			return REL::RuntimeMember<BSFixedString>(this, 0x258, 0x278);
 		}
 
 #ifndef ENABLE_SKYRIM_AE
 		RUNTIME_DATA_CONTENT
-		BSFixedString diamondMarker;  // 258 - "<img src='DiamondMarker' width='10' height='15' align='baseline' vspace='5'>"
+		BSFixedString menuTextureDegradeEvent;  // 250 - "Menu Texture Degrade Event"
+		BSFixedString diamondMarker;            // 258 - "<img src='DiamondMarker' width='10' height='15' align='baseline' vspace='5'>"
 #endif
 
 	private:

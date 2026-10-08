@@ -165,7 +165,7 @@ namespace REL
 			_instance._version = a_version;
 			if (a_runtime == Runtime::Unknown) {
 				// 1.4 = VR, 1.5 = SE, 1.6 and later (incl. 1.7) = AE.
-				if (a_version[1] == 4) {
+				if (a_version[0] == 1 && a_version[1] == 4) {
 					_instance._runtime = Runtime::VR;
 				} else if (a_version[0] > 1 || a_version[1] >= 6) {
 					_instance._runtime = Runtime::AE;
@@ -362,7 +362,7 @@ namespace REL
 			if (version) {
 				_version = *version;
 				// 1.4 = VR, 1.5 = SE, 1.6 and later (incl. 1.7) = AE.
-				if (_version[1] == 4) {
+				if (_version[0] == 1 && _version[1] == 4) {
 					_runtime = Runtime::VR;
 				} else if (_version[0] > 1 || _version[1] >= 6) {
 					_runtime = Runtime::AE;

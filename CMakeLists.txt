@@ -1,5 +1,13 @@
 cmake_minimum_required(VERSION 3.21)
 
+# Static MSVC runtime, matching the x64-windows-static vcpkg triplet (set before project()).
+if(NOT DEFINED CMAKE_MSVC_RUNTIME_LIBRARY)
+	set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+if(NOT DEFINED VCPKG_TARGET_TRIPLET)
+	set(VCPKG_TARGET_TRIPLET "x64-windows-static" CACHE STRING "")
+endif()
+
 project(CommonLibSSENGTemplate VERSION 2.0.0 LANGUAGES CXX)
 
 set(PLUGIN_NAME "ExamplePlugin" CACHE STRING "Name of the generated SKSE plugin DLL")
