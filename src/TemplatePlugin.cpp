@@ -44,7 +44,22 @@ extern "C" __declspec(dllexport) bool SKSEAPI SKSEPlugin_Query(const SKSE::Query
 	a_info->infoVersion = SKSE::PluginInfo::kVersion;
 	a_info->name = TEMPLATE_PLUGIN_NAME;
 	a_info->version = 1;
-	return !a_skse->IsEditor() && a_skse->RuntimeVersion() == SKSE::RUNTIME_SSE_1_5_97;
+	if (a_skse->IsEditor()) {
+		return false;
+	}
+	// SE SKSE and SKSE VR call this; accept only the runtimes this build supports.
+	[[maybe_unused]] const auto runtime = a_skse->RuntimeVersion();
+#ifdef ENABLE_SKYRIM_SE
+	if (runtime == SKSE::RUNTIME_SSE_1_5_97) {
+		return true;
+	}
+#endif
+#ifdef ENABLE_SKYRIM_VR
+	if (runtime == SKSE::RUNTIME_VR_1_4_15) {
+		return true;
+	}
+#endif
+	return false;
 }
 
 extern "C" __declspec(dllexport) bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_skse)

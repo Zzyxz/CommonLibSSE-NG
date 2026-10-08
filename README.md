@@ -28,7 +28,7 @@ The build links the MSVC runtime and the vcpkg dependencies statically (`x64-win
 | `UNIVERSAL` (default) | SE 1.5.97 and AE 1.6/1.7, one DLL |
 | `SE` | SE 1.5.97 only |
 | `AE` | AE 1.6/1.7 only |
-| `VR` | Skyrim VR, built against `extern/CommonLibVR` |
+| `VR` | Skyrim VR 1.4.15 only |
 
 To copy the DLL and PDB into the game after each build, add `-DCOPY_BUILD=ON -DSKYRIM_PATH="C:/path/to/Skyrim Special Edition"`.
 
@@ -82,12 +82,13 @@ Compared with CommonLibSSE NG 3.7.0 (commit `b93280e8`):
 - `IDDatabase::id2offset` requires an exact id match. Before, an id missing from the library silently returned the next id's address on SE and AE. `try_id2offset` returns no value instead of failing.
 - `ControlMap`, `TES`, `InterfaceStrings`, `CombatController` and `BGSSaveLoadManager` select their AE layout at runtime (`GetRuntimeData()`). NG checked a macro it never defines, so these classes always had the SE layout. `ControlMap` also maps `kFavor` to the game's index on AE.
 - Corrected Address Library ids, checked in IDA against 1.5.97 and 1.6.1170: the `BShkbAnimationGraph` variable setters, the SE id of `BSShaderTextureSet::Create`, `InventoryChanges::SetUniqueID`, `ObjectTypeInfo::ReleaseData` (which also takes a flag), two `MovementMessageFreezeDirection` vtables and `FxResponseArgs<12>`. Five functions got new AE ids in 1.6.1130 (`GetCachedString`, `Set_CStr`, `Console::SelectedRef`, `Script::CompileAndRun`, `InventoryChanges::RemoveAllItems`); `REL::AESplitID` picks the id for the running version.
+- `BGSDefaultObjectManager`: SE has 364 default objects, AE 1.6 366 and AE 1.7 372 (entries inserted before the end and, in 1.7, at 188 and 264). `GetObject` and `IsObjectInitialized` translate the SE-numbered index and read the init flags at the right offset (checked in IDA on 1.5.97, 1.6.1170 and 1.7.104). `GetObject(DefaultObjectID)` returned a pointer into the first object instead of the array slot.
 - Runtime constants for 1.6.1130, 1.6.1170, 1.6.1179, 1.7.99 and 1.7.104. `RUNTIME_SSE_1_6_1330` (value 1.5.1330, no such game version) is deprecated.
 - Additions: `REL/Callsite.h`, `REL::RuntimeMember`, `REL::Module::RuntimeFor` and `AddressLibraryFileName`, `PluginVersionData::UsesAddressLibraryV5` and `UsesUpdatedStructs`.
 
 ## Known limits
 
-- Universal builds cover SE and AE. VR is a separate build (`SKYRIM_VARIANT=VR`).
+- Universal builds cover SE and AE. VR is a separate build (`SKYRIM_VARIANT=VR`); it needs the VR Address Library (`version-1-4-15-0.csv`).
 - Some AE ids from NG 3.7.0 are missing from newer Address Libraries. A plugin that calls one of these functions stops with an error on those versions:
   - `TES::GetWaterHeight` (13358) on 1.7
   - `Renderer::RequestWindowResize` (77235) on 1.6.1179 and 1.7

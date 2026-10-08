@@ -1027,7 +1027,40 @@ namespace RE
 		[[nodiscard]] TESForm* GetObject(std::size_t a_idx) const noexcept
 		{
 			assert(a_idx < std::to_underlying(DefaultObject::kTotal));
-			return IsObjectInitialized(a_idx) ? objects[a_idx] : nullptr;
+			if SKYRIM_REL_VR_CONSTEXPR (REL::Module::IsVR()) {
+				return IsObjectInitialized(a_idx) ? objects[a_idx] : nullptr;
+			}
+			return IsObjectInitialized(a_idx) ? GetObjectArray()[ToGameIndex(a_idx)] : nullptr;
+		}
+
+		/**
+		 * The game's index for an SE-numbered default object (DEFAULT_OBJECT / the SE part of DefaultObjectID).
+		 * Verified in IDA (descriptor table and InitItemImpl) for 1.5.97, 1.6.1170 and 1.7.104:
+		 * - SE: 364 objects.
+		 * - AE 1.6: 366 objects; "Help Manual Creation Club" (363) and "...AE" (364) come before
+		 *   kModsHelpFormList, which moves from 363 to 365.
+		 * - AE 1.7: 372 objects; "Help Manual NX" is inserted at 188 and five "Help - Motion"/"Amiibo"
+		 *   entries at 264..268, so 1.6 indices 188..262 move up by 1 and 263.. by 6.
+		 */
+		[[nodiscard]] static std::size_t ToGameIndex(std::size_t a_seIndex) noexcept
+		{
+			if (!REL::Module::IsAE()) {
+				return a_seIndex;
+			}
+			const std::size_t ae16 = a_seIndex >= 363 ? a_seIndex + 2 : a_seIndex;
+			if (REL::Module::get().version() < REL::Version{ 1, 7, 0, 0 }) {
+				return ae16;
+			}
+			return ae16 < 188 ? ae16 : ae16 <= 262 ? ae16 + 1 : ae16 + 6;
+		}
+
+		// Number of default objects in the running game (SE 364, AE 1.6 366, AE 1.7 372).
+		[[nodiscard]] static std::size_t GetObjectCount() noexcept
+		{
+			if (!REL::Module::IsAE()) {
+				return 364;
+			}
+			return REL::Module::get().version() < REL::Version{ 1, 7, 0, 0 } ? 366 : 372;
 		}
 
 		template <class T>
@@ -1055,7 +1088,26 @@ namespace RE
 
 		[[nodiscard]] bool IsObjectInitialized(std::size_t a_idx) const noexcept
 		{
-			return (&REL::RelocateMember<bool>(this, 0xB80, 0xBA8))[a_idx];
+			if SKYRIM_REL_VR_CONSTEXPR (REL::Module::IsVR()) {
+				return (&REL::RelocateMember<bool>(this, 0xB80, 0xBA8))[a_idx];
+			}
+			return GetObjectInitArray()[ToGameIndex(a_idx)];
+		}
+
+		// objects[] at 0x20 and the init flags right after it, sized for the running game.
+		[[nodiscard]] TESForm* const* GetObjectArray() const noexcept
+		{
+			return reinterpret_cast<TESForm* const*>(reinterpret_cast<std::uintptr_t>(this) + 0x20);
+		}
+
+		[[nodiscard]] TESForm** GetObjectArray() noexcept
+		{
+			return reinterpret_cast<TESForm**>(reinterpret_cast<std::uintptr_t>(this) + 0x20);
+		}
+
+		[[nodiscard]] const bool* GetObjectInitArray() const noexcept
+		{
+			return reinterpret_cast<const bool*>(reinterpret_cast<std::uintptr_t>(this) + 0x20 + GetObjectCount() * sizeof(TESForm*));
 		}
 
 		[[nodiscard]] static bool SupportsVR(DefaultObjectID a_object) noexcept;

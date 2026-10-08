@@ -30,9 +30,11 @@ namespace RE
 		if (idx == kInvalid) {
 			return nullptr;
 		}
-		return (&RelocateMember<bool>(this, 0xB80, 0xBA8))[idx] ?
-                   &RelocateMember<TESForm**>(this, 0x20, 0x20)[idx] :
-                   nullptr;
+		if SKYRIM_REL_VR_CONSTEXPR (Module::IsVR()) {
+			return (&RelocateMember<bool>(this, 0xB80, 0xBA8))[idx] ? &objects[idx] : nullptr;
+		}
+		// The previous code indexed the first object pointer instead of the array.
+		return IsObjectInitialized(idx) ? &GetObjectArray()[ToGameIndex(idx)] : nullptr;
 	}
 
 	bool BGSDefaultObjectManager::IsObjectInitialized(DefaultObjectID a_object) const noexcept

@@ -1,13 +1,11 @@
 {
   "name": "commonlibsse-ng-template",
   "version-string": "2.0.0",
-  "description": "MIT-licensed SKSE plugin template on CommonLibSSE NG: one DLL for SE 1.5.97 and AE 1.6/1.7, Address Library V5. boost-stl-interfaces and rsm-binary-io are only needed for the VR variant (CommonLibVR).",
+  "description": "MIT-licensed SKSE plugin template on CommonLibSSE NG: one DLL for SE 1.5.97 and AE 1.6/1.7, Address Library V5.",
   "homepage": "https://github.com/Zzyxz/CommonLibSSE-NG",
   "license": "MIT",
   "dependencies": [
-    "boost-stl-interfaces",
     "rapidcsv",
-    "rsm-binary-io",
     "spdlog"
   ],
   "builtin-baseline": "78b61582c9e093fda56a01ebb654be15a0033897"
