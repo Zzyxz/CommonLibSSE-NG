@@ -24,5 +24,7 @@ namespace RE
 
 		static BSWin32SaveDataSystemUtility* GetSingleton();
 	};
+#ifndef ENABLE_SKYRIM_AE
 	static_assert(sizeof(BSWin32SaveDataSystemUtility) == 0x228);
+#endif
 }

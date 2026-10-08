@@ -63,14 +63,31 @@ namespace RE
 		void                          DestroyInputDevices();
 		void                          PollInputDevices(float a_secsSinceLastFrame);
 
+		// AE 1.7 has six device slots instead of four, so the runtime data starts 0x10 later (IDA, 1.6.1170 vs 1.7.104).
 		[[nodiscard]] inline RUNTIME_DATA& GetRuntimeData() noexcept
 		{
-			return REL::RelocateMember<RUNTIME_DATA>(this, 0x80, 0x98);
+			return REL::RuntimeMember<RUNTIME_DATA>(this, 0x80, 0x80, 0x90, 0x98);
 		}
 
 		[[nodiscard]] inline const RUNTIME_DATA& GetRuntimeData() const noexcept
 		{
-			return REL::RelocateMember<RUNTIME_DATA>(this, 0x80, 0x98);
+			return REL::RuntimeMember<RUNTIME_DATA>(this, 0x80, 0x80, 0x90, 0x98);
+		}
+
+		/**
+		 * Number of device slots that start at <code>devices</code> in the running game: 4 on SE and AE 1.6,
+		 * 6 on AE 1.7 (two new devices after the virtual keyboard), 7 on VR (an unknown device, then the right
+		 * and left VR controllers).
+		 */
+		[[nodiscard]] static std::uint32_t GetNumDeviceSlots() noexcept
+		{
+			return REL::RelocateAE17<std::uint32_t>(4, 4, 6, 7);
+		}
+
+		// The device in slot a_index, or nullptr for a slot the running game does not have.
+		[[nodiscard]] BSIInputDevice* GetDevice(std::uint32_t a_index) const noexcept
+		{
+			return a_index < GetNumDeviceSlots() ? (&devices[0])[a_index] : nullptr;
 		}
 
 		// members
@@ -83,12 +100,12 @@ namespace RE
 		BSTrackedControllerDevice* unkDevice;     // 80
 		BSTrackedControllerDevice* vrDevices[2];  // 88
 		RUNTIME_DATA_CONTENT                      // 98
-#	elif !defined(ENABLE_SKYRIM_VR)
-		RUNTIME_DATA_CONTENT  // 80
+#	elif !defined(ENABLE_SKYRIM_VR) && !defined(ENABLE_SKYRIM_AE)
+		RUNTIME_DATA_CONTENT  // 80 (AE 1.7: 90, so AE builds use GetRuntimeData())
 #	endif
 #endif
 	};
-#ifndef ENABLE_SKYRIM_VR
+#if !defined(ENABLE_SKYRIM_VR) && !defined(ENABLE_SKYRIM_AE)
 	static_assert(sizeof(BSInputDeviceManager) == 0xF0);
 #elif !defined(ENABLE_SKYRIM_AE) && !defined(ENABLE_SKYRIM_SE)
 	static_assert(sizeof(BSInputDeviceManager) == 0x108);

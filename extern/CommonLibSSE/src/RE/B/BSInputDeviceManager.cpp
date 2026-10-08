@@ -45,7 +45,7 @@ namespace RE
 		if SKYRIM_REL_VR_CONSTEXPR (!REL::Module::IsVR()) {
 			return nullptr;
 		}
-		return static_cast<BSTrackedControllerDevice*>(devices[std::to_underlying(INPUT_DEVICE::kVRRight)]);
+		return static_cast<BSTrackedControllerDevice*>(GetDevice(INPUT_DEVICE::kVRRight));
 #endif
 	}
 
@@ -57,7 +57,7 @@ namespace RE
 		if SKYRIM_REL_VR_CONSTEXPR (!REL::Module::IsVR()) {
 			return nullptr;
 		}
-		return static_cast<BSTrackedControllerDevice*>(devices[std::to_underlying(INPUT_DEVICE::kVRLeft)]);
+		return static_cast<BSTrackedControllerDevice*>(GetDevice(INPUT_DEVICE::kVRLeft));
 #endif
 	}
 
@@ -86,13 +86,13 @@ namespace RE
 
 	bool BSInputDeviceManager::GetDeviceKeyMapping(INPUT_DEVICE a_device, std::uint32_t a_key, BSFixedString& a_mapping)
 	{
-		auto device = devices[std::to_underlying(a_device)];
+		auto device = a_device == INPUT_DEVICE::kNone ? nullptr : GetDevice(static_cast<std::uint32_t>(a_device));
 		return device && device->GetKeyMapping(a_key, a_mapping);
 	}
 
 	bool BSInputDeviceManager::GetDeviceMappedKeycode(INPUT_DEVICE a_device, std::uint32_t a_key, uint32_t& a_outKeyCode)
 	{
-		auto device = devices[std::to_underlying(a_device)];
+		auto device = a_device == INPUT_DEVICE::kNone ? nullptr : GetDevice(static_cast<std::uint32_t>(a_device));
 		return device && device->GetMappedKeycode(a_key, a_outKeyCode);
 	}
 
@@ -115,27 +115,31 @@ namespace RE
 
 	void BSInputDeviceManager::CreateInputDevices()
 	{
-		for (std::uint32_t i = 0; i < INPUT_DEVICE::kTotal; i++) {
-			devices[i] = BSInputDeviceFactory::CreateInputDevice(static_cast<INPUT_DEVICE>(i));
-			devices[i]->Initialize();
+		// One slot per device of the running game; INPUT_DEVICE::kTotal counts the VR devices in VR builds.
+		auto* slots = &devices[0];
+		for (std::uint32_t i = 0; i < GetNumDeviceSlots(); i++) {
+			slots[i] = BSInputDeviceFactory::CreateInputDevice(static_cast<INPUT_DEVICE>(i));
+			if (slots[i]) {
+				slots[i]->Initialize();
+			}
 		}
 	}
 
 	void BSInputDeviceManager::ResetInputDevices()
 	{
-		for (std::uint32_t i = 0; i < INPUT_DEVICE::kTotal; i++) {
-			if (devices[i]) {
-				devices[i]->Reset();
+		for (std::uint32_t i = 0; i < GetNumDeviceSlots(); i++) {
+			if (auto* device = GetDevice(i)) {
+				device->Reset();
 			}
 		}
 	}
 
 	void BSInputDeviceManager::DestroyInputDevices()
 	{
-		for (std::uint32_t i = 0; i < INPUT_DEVICE::kTotal; i++) {
-			if (devices[i]) {
-				devices[i]->Release();
-				BSInputDeviceFactory::DestroyInputDevice(devices[i]);
+		for (std::uint32_t i = 0; i < GetNumDeviceSlots(); i++) {
+			if (auto* device = GetDevice(i)) {
+				device->Release();
+				BSInputDeviceFactory::DestroyInputDevice(device);
 			}
 		}
 	}

@@ -2,6 +2,10 @@
 
 #include "REX/W32/KERNEL32.h"
 
+#include <map>
+#include <memory>
+#include <mutex>
+
 namespace REL
 {
 	void safe_write(std::uintptr_t a_dst, const void* a_src, std::size_t a_count)
@@ -30,5 +34,29 @@ namespace REL
 		}
 
 		assert(success);
+	}
+
+	const std::uintptr_t* InsertVTableSlots(const std::uintptr_t* a_cppVtable, std::size_t a_cppSlotCount,
+		std::size_t a_insertAt, std::size_t a_insertCount, const std::uintptr_t* a_gameBaseVtable)
+	{
+		static std::mutex                                                     lock;
+		static std::map<const std::uintptr_t*, std::unique_ptr<std::uintptr_t[]>> tables;
+
+		std::scoped_lock guard{ lock };
+		auto&            table = tables[a_cppVtable];
+		if (!table) {
+			// Slot -1 holds the RTTI locator (MSVC), so dynamic_cast and typeid keep working on the object.
+			table = std::make_unique<std::uintptr_t[]>(1 + a_cppSlotCount + a_insertCount);
+			table[0] = a_cppVtable[-1];
+			for (std::size_t i = 0, out = 1; i < a_cppSlotCount; ++i, ++out) {
+				if (i == a_insertAt) {
+					for (std::size_t k = 0; k < a_insertCount; ++k) {
+						table[out++] = a_gameBaseVtable[a_insertAt + k];
+					}
+				}
+				table[out] = a_cppVtable[i];
+			}
+		}
+		return table.get() + 1;
 	}
 }

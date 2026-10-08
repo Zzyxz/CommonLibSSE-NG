@@ -32,46 +32,56 @@ namespace RE
 		inline static constexpr auto      VTABLE = VTABLE_LockpickingMenu;
 		constexpr static std::string_view MENU_NAME = "Lockpicking Menu";
 
+		// AE 1.7 inserts 0x14 bytes before pickTensionSound (IDA, 1.6.1170 vs 1.7.104), so the members from there
+		// on are in a second block with its own offset.
 		struct RUNTIME_DATA
 		{
-#define RUNTIME_DATA_CONTENT                            \
-	void*                 lockpickShiv;        /* 00 */ \
-	void*                 lockpick;            /* 08 */ \
-	NiMatrix3             pickRotation;        /* 10 */ \
-	NiPoint3              lockRotCenter;       /* 34 */ \
-	NiControllerManager*  lockController;      /* 40 */ \
-	NiControllerSequence* lockIntro;           /* 48 */ \
-	NiControllerSequence* lockRotate;          /* 50 */ \
-	NiControllerManager*  pickController;      /* 58 */ \
-	NiControllerSequence* pickIntro;           /* 60 */ \
-	NiControllerSequence* pickDamage;          /* 68 */ \
-	NiControllerSequence* pickBreak;           /* 70 */ \
-	NiControllerSequence* currentPickSequence; /* 78 */ \
-	float                 pickKeyTime;         /* 80 */ \
-	std::uint32_t         unk0CC;              /* 84 */ \
-	NiControllerSequence* currentLockSequence; /* 88 */ \
-	float                 lockKeyTime;         /* 90 */ \
-	float                 pickAngle;           /* 94 */ \
-	float                 lockAngle;           /* 98 */ \
-	float                 damagePickAngle;     /* 9C */ \
-	float                 pickBreakSeconds;    /* A0 */ \
-	BSSoundHandle         pickTensionSound;    /* A4 */ \
-	float                 unk0F8;              /* B0 */ \
-	float                 sweetSpotAngle;      /* B4 */ \
-	float                 partialPickAngle;    /* B8 */ \
-	std::uint32_t         numBrokenPicks;      /* BC */ \
-	bool                  init3DElements;      /* C0 */ \
-    bool                  animating;           /* C1 */ \
-	bool                  unk10A;              /* C2 */ \
-	bool                  menuCleared;         /* C3 */ \
-	bool                  animationFinished;   /* C4 */ \
-	bool                  isLockpickingCrime;  /* C5 */ \
-	std::uint8_t          unk10E;              /* C6 */ \
-	std::uint8_t          pad10F;              /* C7 */
+#define RUNTIME_DATA_CONTENT                             \
+	void*                 lockpickShiv;        /* 00 */  \
+	void*                 lockpick;            /* 08 */  \
+	NiMatrix3             pickRotation;        /* 10 */  \
+	NiPoint3              lockRotCenter;       /* 34 */  \
+	NiControllerManager*  lockController;      /* 40 */  \
+	NiControllerSequence* lockIntro;           /* 48 */  \
+	NiControllerSequence* lockRotate;          /* 50 */  \
+	NiControllerManager*  pickController;      /* 58 */  \
+	NiControllerSequence* pickIntro;           /* 60 */  \
+	NiControllerSequence* pickDamage;          /* 68 */  \
+	NiControllerSequence* pickBreak;           /* 70 */  \
+	NiControllerSequence* currentPickSequence; /* 78 */  \
+	float                 pickKeyTime;         /* 80 */  \
+	std::uint32_t         unk0CC;              /* 84 */  \
+	NiControllerSequence* currentLockSequence; /* 88 */  \
+	float                 lockKeyTime;         /* 90 */  \
+	float                 pickAngle;           /* 94 */  \
+	float                 lockAngle;           /* 98 */  \
+	float                 damagePickAngle;     /* 9C */  \
+	float                 pickBreakSeconds;    /* A0 */
 
 			RUNTIME_DATA_CONTENT
 		};
-		static_assert(sizeof(RUNTIME_DATA) == 0xC8);
+		static_assert(sizeof(RUNTIME_DATA) == 0xA8);
+
+		struct PICK_RUNTIME_DATA
+		{
+#define PICK_RUNTIME_DATA_CONTENT                        \
+	BSSoundHandle         pickTensionSound;    /* 00 */  \
+	float                 unk0F8;              /* 0C */  \
+	float                 sweetSpotAngle;      /* 10 */  \
+	float                 partialPickAngle;    /* 14 */  \
+	std::uint32_t         numBrokenPicks;      /* 18 */  \
+	bool                  init3DElements;      /* 1C */  \
+	bool                  animating;           /* 1D */  \
+	bool                  unk10A;              /* 1E */  \
+	bool                  menuCleared;         /* 1F */  \
+	bool                  animationFinished;   /* 20 */  \
+	bool                  isLockpickingCrime;  /* 21 */  \
+	std::uint8_t          unk10E;              /* 22 */  \
+	std::uint8_t          pad10F;              /* 23 */
+
+			PICK_RUNTIME_DATA_CONTENT
+		};
+		static_assert(sizeof(PICK_RUNTIME_DATA) == 0x24);
 
 		~LockpickingMenu() override;  // 00
 
@@ -121,15 +131,30 @@ namespace RE
 			return REL::RelocateMember<RUNTIME_DATA>(this, 0x48, 0x58);
 		}
 
+		// pickTensionSound and the members after it: SE/AE 1.6 0xEC, AE 1.7 0x100, VR 0xFC.
+		[[nodiscard]] inline PICK_RUNTIME_DATA& GetPickRuntimeData() noexcept
+		{
+			return REL::RuntimeMember<PICK_RUNTIME_DATA>(this, 0xEC, 0xEC, 0x100, 0xFC);
+		}
+
+		[[nodiscard]] inline const PICK_RUNTIME_DATA& GetPickRuntimeData() const noexcept
+		{
+			return REL::RuntimeMember<PICK_RUNTIME_DATA>(this, 0xEC, 0xEC, 0x100, 0xFC);
+		}
+
 		// members
 #ifndef SKYRIM_CROSS_VR
 		RUNTIME_DATA_CONTENT  // 48, 58
+#	ifndef ENABLE_SKYRIM_AE
+		PICK_RUNTIME_DATA_CONTENT  // EC, FC (AE 1.7: 100, so AE builds use GetPickRuntimeData())
+#	endif
 #endif
 	};
-#ifndef ENABLE_SKYRIM_VR
+#if !defined(ENABLE_SKYRIM_VR) && !defined(ENABLE_SKYRIM_AE)
 	static_assert(sizeof(LockpickingMenu) == 0x110);
 #elif !defined(ENABLE_SKYRIM_AE) && !defined(ENABLE_SKYRIM_SE)
 	static_assert(sizeof(LockpickingMenu) == 0x120);
 #endif
 }
 #undef RUNTIME_DATA_CONTENT
+#undef PICK_RUNTIME_DATA_CONTENT

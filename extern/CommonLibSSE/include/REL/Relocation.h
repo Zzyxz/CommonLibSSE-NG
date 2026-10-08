@@ -685,6 +685,53 @@ namespace REL
 	{
 		return *reinterpret_cast<const T*>(reinterpret_cast<std::uintptr_t>(a_self) + Relocate<std::ptrdiff_t>(a_seOffset, a_aeOffset, a_vrOffset));
 	}
+
+	/**
+	 * True on Skyrim AE 1.7 and later. 1.7 changed the layout of a few classes against 1.6 (new base classes,
+	 * inserted members and vtable slots), so those need a separate offset.
+	 */
+	[[nodiscard]] inline bool IsAE17() noexcept
+	{
+		return Module::IsAE() && Module::get().version() >= Version{ 1, 7, 0, 0 };
+	}
+
+	// Value for the running game: SE 1.5, AE 1.6, AE 1.7 or later, VR.
+	template <class T>
+	[[nodiscard]] inline T RelocateAE17(T a_se, T a_ae, T a_ae17, T a_vr) noexcept
+	{
+		if (Module::IsVR()) {
+			return a_vr;
+		}
+		if (!Module::IsAE()) {
+			return a_se;
+		}
+		return IsAE17() ? a_ae17 : a_ae;
+	}
+
+	/**
+	 * A vtable in the game's layout for a class written in a plugin whose C++ vtable has the SE layout, for game
+	 * versions that inserted virtual functions into a game base class (e.g. PlayerInputHandler on AE 1.7 and VR).
+	 *
+	 * The result has a_cppSlotCount + a_insertCount slots: the slots before a_insertAt come from a_cppVtable, then
+	 * a_insertCount slots from a_gameBaseVtable (the game's own base-class functions at a_insertAt and following),
+	 * then the remaining slots of a_cppVtable. Tables are built once per C++ vtable and kept for the lifetime of
+	 * the process. Assign the result to the object's vtable pointer.
+	 */
+	[[nodiscard]] const std::uintptr_t* InsertVTableSlots(const std::uintptr_t* a_cppVtable, std::size_t a_cppSlotCount,
+		std::size_t a_insertAt, std::size_t a_insertCount, const std::uintptr_t* a_gameBaseVtable);
+
+	// Member access with separate SE, AE 1.6, AE 1.7 and VR offsets.
+	template <class T, class This>
+	[[nodiscard]] inline T& RuntimeMember(This* a_self, std::ptrdiff_t a_seOffset, std::ptrdiff_t a_aeOffset, std::ptrdiff_t a_ae17Offset, std::ptrdiff_t a_vrOffset) noexcept
+	{
+		return *reinterpret_cast<T*>(reinterpret_cast<std::uintptr_t>(a_self) + RelocateAE17<std::ptrdiff_t>(a_seOffset, a_aeOffset, a_ae17Offset, a_vrOffset));
+	}
+
+	template <class T, class This>
+	[[nodiscard]] inline const T& RuntimeMember(const This* a_self, std::ptrdiff_t a_seOffset, std::ptrdiff_t a_aeOffset, std::ptrdiff_t a_ae17Offset, std::ptrdiff_t a_vrOffset) noexcept
+	{
+		return *reinterpret_cast<const T*>(reinterpret_cast<std::uintptr_t>(a_self) + RelocateAE17<std::ptrdiff_t>(a_seOffset, a_aeOffset, a_ae17Offset, a_vrOffset));
+	}
 }
 
 #undef REL_MAKE_MEMBER_FUNCTION_NON_POD_TYPE

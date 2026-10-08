@@ -92,6 +92,10 @@ namespace RE
 		virtual void    Unk_11(void);                                                                                    // 11 - { return; }
 
 		// members
+		// AE 1.7 moved these members (+0x30 in the code that uses them) and added six virtual functions at slot 05
+		// (IDA, 1.6.1170 vs 1.7.104), so they are only declared where their offsets are known: builds without AE.
+		// CreateSaveDirectory (01) and PrepareFileSavePath (02) keep their slots.
+#ifndef ENABLE_SKYRIM_AE
 		std::uint32_t unk060;       // 060
 		std::uint32_t profileHash;  // 064
 		std::uint64_t unk068;       // 068
@@ -100,6 +104,9 @@ namespace RE
 		std::uint64_t unk210;       // 210
 		std::uint64_t unk218;       // 218
 		std::uint64_t unk220;       // 220
+#endif
 	};
+#ifndef ENABLE_SKYRIM_AE
 	static_assert(sizeof(BSSaveDataSystemUtility) == 0x228);
+#endif
 }

@@ -51,6 +51,41 @@ namespace RE
 			return *worldScaleInverse;
 		}
 
+		// AE 1.7 inserts 0x108 bytes at 0xC5D8 (a new 0x100-byte sub-object at 0xC5E0), so the members from unkC5D8
+		// on lie 0x108 later (IDA, 1.6.1170 vs 1.7.104; size 0xC600 -> 0xC710). Builds with AE reach them through
+		// GetStepData(). VR has the SE layout.
+		struct STEP_DATA
+		{
+#define STEP_DATA_CONTENT                                          \
+	std::uint32_t unkC5D8;          /* 00 - incremented per frame */  \
+	std::uint32_t unkC5DC;          /* 04 */                          \
+	std::uint32_t unkC5E0;          /* 08 */                          \
+	std::uint32_t unkC5E4;          /* 0C */                          \
+	std::uint32_t unkC5E8;          /* 10 */                          \
+	std::uint32_t unkC5EC;          /* 14 */                          \
+	float         tau;              /* 18 */                          \
+	float         damping;          /* 1C */                          \
+	std::uint8_t  unkC5F8;          /* 20 */                          \
+	bool          toggleCollision;  /* 21 */                          \
+	std::uint16_t unkC5FA;          /* 22 */                          \
+	std::uint16_t unkC5FC;          /* 24 */                          \
+	std::uint16_t unkC5FE;          /* 26 */
+
+			STEP_DATA_CONTENT
+		};
+		static_assert(sizeof(STEP_DATA) == 0x28);
+
+		// SE, AE 1.6 and VR 0xC5D8; AE 1.7 0xC6E0.
+		[[nodiscard]] inline STEP_DATA& GetStepData() noexcept
+		{
+			return REL::RuntimeMember<STEP_DATA>(this, 0xC5D8, 0xC5D8, 0xC6E0, 0xC5D8);
+		}
+
+		[[nodiscard]] inline const STEP_DATA& GetStepData() const noexcept
+		{
+			return REL::RuntimeMember<STEP_DATA>(this, 0xC5D8, 0xC5D8, 0xC6E0, 0xC5D8);
+		}
+
 		// members
 		std::uint8_t                  unk0020[0x320];             // 0020
 		std::uint8_t                  unk0340[0x6400];            // 0340
@@ -75,19 +110,12 @@ namespace RE
 		std::uint64_t                 unkC5C0;                    // C5C0
 		BGSAcousticSpaceListener*     acousticSpaceListener;      // C5C8
 		hkpSuspendInactiveAgentsUtil* suspendInactiveAgentsUtil;  // C5D0
-		std::uint32_t                 unkC5D8;                    // C5D8 - incremented per frame
-		std::uint32_t                 unkC5DC;                    // C5DC
-		std::uint32_t                 unkC5E0;                    // C5E0
-		std::uint32_t                 unkC5E4;                    // C5E4
-		std::uint32_t                 unkC5E8;                    // C5E8
-		std::uint32_t                 unkC5EC;                    // C5EC
-		float                         tau;                        // C5F0
-		float                         damping;                    // C5F4
-		std::uint8_t                  unkC5F8;                    // C5F8
-		bool                          toggleCollision;            // C5F9
-		std::uint16_t                 unkC5FA;                    // C5FA
-		std::uint16_t                 unkC5FC;                    // C5FC
-		std::uint16_t                 unkC5FE;                    // C5FE
+#ifndef ENABLE_SKYRIM_AE
+		STEP_DATA_CONTENT  // C5D8
+#endif
 	};
+#ifndef ENABLE_SKYRIM_AE
 	static_assert(sizeof(bhkWorld) == 0xC600);
+#endif
 }
+#undef STEP_DATA_CONTENT
