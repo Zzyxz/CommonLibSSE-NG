@@ -23,23 +23,30 @@ namespace RE
 		}
 	}
 
+	namespace
+	{
+		// DefaultObjectID carries the SE index and the VR index; the SE index is translated for AE.
+		std::size_t GameIndexFromID(DefaultObjectID a_object) noexcept
+		{
+			const auto idx = MapIndex(std::to_underlying(a_object));
+			if (idx == kInvalid) {
+				return kInvalid;
+			}
+			return Module::IsVR() ? idx : BGSDefaultObjectManager::ToGameIndex(idx);
+		}
+	}
+
 	TESForm** BGSDefaultObjectManager::GetObject(DefaultObjectID a_object) noexcept
 	{
-		assert(std::to_underlying(a_object) < Relocate(364, 364, 369));
-		auto idx = MapIndex(std::to_underlying(a_object));
-		if (idx == kInvalid) {
-			return nullptr;
-		}
-		if SKYRIM_REL_VR_CONSTEXPR (Module::IsVR()) {
-			return (&RelocateMember<bool>(this, 0xB80, 0xBA8))[idx] ? &objects[idx] : nullptr;
-		}
-		// The previous code indexed the first object pointer instead of the array.
-		return IsObjectInitialized(idx) ? &GetObjectArray()[ToGameIndex(idx)] : nullptr;
+		const auto idx = GameIndexFromID(a_object);
+		// NG returned &RelocateMember<TESForm**>(this, 0x20)[idx], which indexed the first object pointer.
+		return idx != kInvalid && IsGameIndexInitialized(idx) ? &GetObjectArray()[idx] : nullptr;
 	}
 
 	bool BGSDefaultObjectManager::IsObjectInitialized(DefaultObjectID a_object) const noexcept
 	{
-		return IsObjectInitialized(MapIndex(std::to_underlying(a_object)));
+		const auto idx = GameIndexFromID(a_object);
+		return idx != kInvalid && IsGameIndexInitialized(idx);
 	}
 
 	bool BGSDefaultObjectManager::SupportsVR(DefaultObjectID a_object) noexcept

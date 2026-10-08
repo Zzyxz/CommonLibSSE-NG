@@ -659,7 +659,7 @@ namespace REL
 {
 	/**
 	 * Member access with the offset chosen for the running game: SE (1.5) or AE (1.6 and later).
-	 * Kept from the previous template; for SE/AE/VR use RelocateMember / Relocate.
+	 * VR uses the SE offset; use the three-offset overload when VR differs.
 	 */
 	template <class T, class This>
 	[[nodiscard]] inline T& RuntimeMember(This* a_self, std::ptrdiff_t a_seOffset, std::ptrdiff_t a_aeOffset) noexcept
@@ -671,6 +671,19 @@ namespace REL
 	[[nodiscard]] inline const T& RuntimeMember(const This* a_self, std::ptrdiff_t a_seOffset, std::ptrdiff_t a_aeOffset) noexcept
 	{
 		return *reinterpret_cast<const T*>(reinterpret_cast<std::uintptr_t>(a_self) + (Module::IsAE() ? a_aeOffset : a_seOffset));
+	}
+
+	// Member access with separate SE, AE and VR offsets.
+	template <class T, class This>
+	[[nodiscard]] inline T& RuntimeMember(This* a_self, std::ptrdiff_t a_seOffset, std::ptrdiff_t a_aeOffset, std::ptrdiff_t a_vrOffset) noexcept
+	{
+		return *reinterpret_cast<T*>(reinterpret_cast<std::uintptr_t>(a_self) + Relocate<std::ptrdiff_t>(a_seOffset, a_aeOffset, a_vrOffset));
+	}
+
+	template <class T, class This>
+	[[nodiscard]] inline const T& RuntimeMember(const This* a_self, std::ptrdiff_t a_seOffset, std::ptrdiff_t a_aeOffset, std::ptrdiff_t a_vrOffset) noexcept
+	{
+		return *reinterpret_cast<const T*>(reinterpret_cast<std::uintptr_t>(a_self) + Relocate<std::ptrdiff_t>(a_seOffset, a_aeOffset, a_vrOffset));
 	}
 }
 

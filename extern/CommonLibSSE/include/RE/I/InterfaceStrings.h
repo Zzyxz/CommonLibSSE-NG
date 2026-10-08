@@ -64,11 +64,15 @@ namespace RE
 		BSFixedString tutorialMenu;            // 180 - "Tutorial Menu"
 		BSFixedString creditsMenu;             // 188 - "Credits Menu"
 		BSFixedString modManagerMenu;          // 190 - "Mod Manager Menu"
-		BSFixedString creationClubMenu;        // 198 - "Creation Club Menu"
+#ifndef ENABLE_SKYRIM_VR
+		BSFixedString creationClubMenu;  // 198 - "Creation Club Menu" (not in VR, use GetCreationClubMenu())
+#endif
 		// AE (1.6 and 1.7, verified in IDA from the constructor) inserts "Login Menu" (0x1A0) and
 		// "Marketplace Menu" (0x1A8), so titleSequenceMenu .. cancelLoading lie 0x10 bytes later. After
 		// cancelLoading AE stores "UserSettingsLoaded" (0x260) and "ActivityStarted" (0x268), then
 		// menuTextureDegradeEvent (SE 0x250, AE 0x270) and diamondMarker (SE 0x258, AE 0x278).
+		// VR 1.4.15 (IDA, constructor VR 0xF314A0) has no "Creation Club Menu", so the strings after 0x190 lie
+		// 8 bytes earlier than on SE, and appends seven VR strings at 0x258..0x288.
 		struct RUNTIME_DATA
 		{
 #define RUNTIME_DATA_CONTENT \
@@ -101,12 +105,12 @@ namespace RE
 
 		[[nodiscard]] RUNTIME_DATA& GetRuntimeData() noexcept
 		{
-			return REL::RuntimeMember<RUNTIME_DATA>(this, 0x1A0, 0x1B0);
+			return REL::RuntimeMember<RUNTIME_DATA>(this, 0x1A0, 0x1B0, 0x198);
 		}
 
 		[[nodiscard]] const RUNTIME_DATA& GetRuntimeData() const noexcept
 		{
-			return REL::RuntimeMember<RUNTIME_DATA>(this, 0x1A0, 0x1B0);
+			return REL::RuntimeMember<RUNTIME_DATA>(this, 0x1A0, 0x1B0, 0x198);
 		}
 
 		// "Login Menu", "Marketplace Menu", "UserSettingsLoaded", "ActivityStarted": AE only, nullptr on SE.
@@ -115,19 +119,34 @@ namespace RE
 		[[nodiscard]] const BSFixedString* GetUserSettingsLoaded() const noexcept { return GetAEOnly(0x260); }
 		[[nodiscard]] const BSFixedString* GetActivityStarted() const noexcept { return GetAEOnly(0x268); }
 
+		// "Creation Club Menu": SE and AE only, nullptr on VR.
+		[[nodiscard]] const BSFixedString* GetCreationClubMenu() const noexcept
+		{
+			return REL::Module::IsVR() ? nullptr : std::addressof(REL::RelocateMember<BSFixedString>(this, 0x198));
+		}
+
+		// VR only, nullptr on SE and AE.
+		[[nodiscard]] const BSFixedString* GetWSEnemyMeters() const noexcept { return GetVROnly(0x258); }
+		[[nodiscard]] const BSFixedString* GetWSActivateRollover() const noexcept { return GetVROnly(0x260); }
+		[[nodiscard]] const BSFixedString* GetWSDebugOverlay() const noexcept { return GetVROnly(0x268); }
+		[[nodiscard]] const BSFixedString* GetStatsMenuSkillRing() const noexcept { return GetVROnly(0x270); }
+		[[nodiscard]] const BSFixedString* GetStatsMenuPerks() const noexcept { return GetVROnly(0x278); }
+		[[nodiscard]] const BSFixedString* GetMapMarkerText3D() const noexcept { return GetVROnly(0x280); }
+		[[nodiscard]] const BSFixedString* GetCalibrationOptionMenu() const noexcept { return GetVROnly(0x288); }
+
 		// "Menu Texture Degrade Event"
 		[[nodiscard]] const BSFixedString& GetMenuTextureDegradeEvent() const noexcept
 		{
-			return REL::RuntimeMember<BSFixedString>(this, 0x250, 0x270);
+			return REL::RuntimeMember<BSFixedString>(this, 0x250, 0x270, 0x248);
 		}
 
 		// "<img src='DiamondMarker' width='10' height='15' align='baseline' vspace='5'>"
 		[[nodiscard]] const BSFixedString& GetDiamondMarker() const noexcept
 		{
-			return REL::RuntimeMember<BSFixedString>(this, 0x258, 0x278);
+			return REL::RuntimeMember<BSFixedString>(this, 0x258, 0x278, 0x250);
 		}
 
-#ifndef ENABLE_SKYRIM_AE
+#if !defined(ENABLE_SKYRIM_AE) && !defined(ENABLE_SKYRIM_VR)
 		RUNTIME_DATA_CONTENT
 		BSFixedString menuTextureDegradeEvent;  // 250 - "Menu Texture Degrade Event"
 		BSFixedString diamondMarker;            // 258 - "<img src='DiamondMarker' width='10' height='15' align='baseline' vspace='5'>"
@@ -138,8 +157,13 @@ namespace RE
 		{
 			return REL::Module::IsAE() ? std::addressof(REL::RelocateMember<BSFixedString>(this, a_offset)) : nullptr;
 		}
+
+		[[nodiscard]] const BSFixedString* GetVROnly(std::ptrdiff_t a_offset) const noexcept
+		{
+			return REL::Module::IsVR() ? std::addressof(REL::RelocateMember<BSFixedString>(this, a_offset)) : nullptr;
+		}
 	};
-#ifndef ENABLE_SKYRIM_AE
+#if !defined(ENABLE_SKYRIM_AE) && !defined(ENABLE_SKYRIM_VR)
 	static_assert(sizeof(InterfaceStrings) == 0x260);
 #endif
 }

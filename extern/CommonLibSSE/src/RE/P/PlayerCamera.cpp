@@ -1,5 +1,7 @@
 #include "RE/P/PlayerCamera.h"
 
+#include "RE/T/TESCameraState.h"
+
 namespace RE
 {
 	PlayerCamera* PlayerCamera::GetSingleton()
@@ -30,6 +32,16 @@ namespace RE
 		return true;
 	}
 
+	std::optional<CameraState> PlayerCamera::GetCurrentState() const noexcept
+	{
+		return currentState ? FromGameStateID(currentState->id) : std::nullopt;
+	}
+
+	bool PlayerCamera::IsInVRCameraMode() const noexcept
+	{
+		return REL::Module::IsVR() && currentState && currentState->id == kVRCameraStateID;
+	}
+
 	bool PlayerCamera::IsInBleedoutMode() const
 	{
 		return QCameraEquals(CameraState::kBleedout);
@@ -52,7 +64,7 @@ namespace RE
 
 	bool PlayerCamera::QCameraEquals(CameraState a_cameraState) const
 	{
-		return currentState && currentState == cameraStates[a_cameraState];
+		return currentState && currentState.get() == GetCameraState(a_cameraState);
 	}
 
 	void PlayerCamera::ToggleFreeCameraMode(bool a_freezeTime)

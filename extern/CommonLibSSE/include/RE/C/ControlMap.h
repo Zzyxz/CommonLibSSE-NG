@@ -83,7 +83,9 @@ namespace RE
 
 		// AE (1.6+) has one input context more than SE: Marketplace is inserted at game index 16, so kFavor is
 		// 16 on SE and 17 on AE, and everything after controlMap[] lies 8 bytes later (verified in IDA for
-		// 1.5.97, 1.6.1170 and 1.7.104). InputContextID keeps the SE numbering; the methods below translate.
+		// 1.5.97, 1.6.1170 and 1.7.104). VR 1.4.15 has 21 contexts, so everything after controlMap[] lies
+		// 0x20 bytes later than on SE (IDA: constructor VR 0xC4D710, PushInputContext VR 0xC4E480).
+		// InputContextID keeps the SE numbering; the methods below translate.
 		struct RUNTIME_DATA
 		{
 #define RUNTIME_DATA_CONTENT                                                                                       \
@@ -103,12 +105,12 @@ namespace RE
 
 		[[nodiscard]] RUNTIME_DATA& GetRuntimeData() noexcept
 		{
-			return REL::RuntimeMember<RUNTIME_DATA>(this, 0xE8, 0xF0);
+			return REL::RuntimeMember<RUNTIME_DATA>(this, 0xE8, 0xF0, 0x108);
 		}
 
 		[[nodiscard]] const RUNTIME_DATA& GetRuntimeData() const noexcept
 		{
-			return REL::RuntimeMember<RUNTIME_DATA>(this, 0xE8, 0xF0);
+			return REL::RuntimeMember<RUNTIME_DATA>(this, 0xE8, 0xF0, 0x108);
 		}
 
 		// The game's index for a context: kFavor and later move up by one on AE.
@@ -149,12 +151,12 @@ namespace RE
 		void             ToggleControls(UEFlag a_flags, bool a_enable);
 
 		// members
-#ifndef ENABLE_SKYRIM_AE
+#if !defined(ENABLE_SKYRIM_AE) && !defined(ENABLE_SKYRIM_VR)
 		InputContext* controlMap[InputContextID::kTotal];  // 060
 		RUNTIME_DATA_CONTENT
 #endif
 	};
-#ifndef ENABLE_SKYRIM_AE
+#if !defined(ENABLE_SKYRIM_AE) && !defined(ENABLE_SKYRIM_VR)
 	static_assert(sizeof(ControlMap) == 0x128);
 #endif
 }

@@ -33,11 +33,21 @@ namespace REL
 			_split(a_id)
 		{}
 
+		// SE/AE ids plus a fixed VR offset, for functions missing from the VR Address Library.
+		constexpr CallsiteID(RelocationID a_id, std::uint32_t a_vrOffset) noexcept :
+			_id(a_id),
+			_vrOffset(a_vrOffset)
+		{}
+
 		[[nodiscard]] std::uint64_t id() const noexcept { return _split ? _split->id() : _id.id(); }
+
+		// The function's offset in the running game, or no value if it is unknown there.
+		[[nodiscard]] std::optional<std::uint32_t> rva() const noexcept;
 
 	private:
 		RelocationID             _id;
 		std::optional<AESplitID> _split;
+		std::uint32_t            _vrOffset{ 0 };
 	};
 
 	enum class AutoCallsiteBranch : std::uint8_t

@@ -267,7 +267,7 @@ namespace REL
 		[[nodiscard]] std::optional<ResolvedOwner> resolve_owner(CallsiteID a_owner, CallsiteStatus& a_status)
 		{
 			ResolvedOwner result;
-			const auto    ownerRVA = try_rva(a_owner.id());
+			const auto    ownerRVA = a_owner.rva();
 			if (!ownerRVA) {
 				a_status = CallsiteStatus::kUnknownID;
 				return std::nullopt;
@@ -390,6 +390,14 @@ namespace REL
 		}
 	}
 
+	std::optional<std::uint32_t> CallsiteID::rva() const noexcept
+	{
+		if (_vrOffset != 0 && Module::IsVR()) {
+			return _vrOffset;
+		}
+		return try_rva(id());
+	}
+
 	std::string_view callsite_status_text(CallsiteStatus a_status) noexcept
 	{
 		switch (a_status) {
@@ -421,7 +429,7 @@ namespace REL
 		if (!owner) {
 			return result;
 		}
-		const auto targetRVA = try_rva(a_target.id());
+		const auto targetRVA = a_target.rva();
 		if (!targetRVA) {
 			result.status = CallsiteStatus::kUnknownID;
 			return result;
@@ -444,7 +452,7 @@ namespace REL
 		if (!owner) {
 			return lookup;
 		}
-		const auto targetRVA = try_rva(a_callsite.target().id());
+		const auto targetRVA = a_callsite.target().rva();
 		if (!targetRVA) {
 			lookup.status = CallsiteStatus::kUnknownID;
 			return lookup;

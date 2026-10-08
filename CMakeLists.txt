@@ -12,7 +12,7 @@ project(CommonLibSSENGTemplate VERSION 2.0.0 LANGUAGES CXX)
 
 set(PLUGIN_NAME "ExamplePlugin" CACHE STRING "Name of the generated SKSE plugin DLL")
 set(PLUGIN_AUTHOR "YourName" CACHE STRING "Plugin author shown to SKSE")
-# UNIVERSAL: one DLL for SE 1.5.97 and AE 1.6/1.7. Class layouts that differ are selected at runtime
+# UNIVERSAL: one DLL for SE 1.5.97, AE 1.6/1.7 and VR 1.4.15. Class layouts that differ are selected at runtime
 # (GetRuntimeData(), RelocateMember, RuntimeMember). SE or AE limit the build to one runtime.
 set(SKYRIM_VARIANT "UNIVERSAL" CACHE STRING "Skyrim runtime variant: UNIVERSAL, SE, AE, or VR")
 set_property(CACHE SKYRIM_VARIANT PROPERTY STRINGS UNIVERSAL SE AE VR)
@@ -34,7 +34,7 @@ set(BUILD_TESTS OFF CACHE BOOL "" FORCE)
 if(SKYRIM_VARIANT STREQUAL "UNIVERSAL")
 	set(ENABLE_SKYRIM_SE ON CACHE BOOL "" FORCE)
 	set(ENABLE_SKYRIM_AE ON CACHE BOOL "" FORCE)
-	set(ENABLE_SKYRIM_VR OFF CACHE BOOL "" FORCE)
+	set(ENABLE_SKYRIM_VR ON CACHE BOOL "" FORCE)
 elseif(SKYRIM_VARIANT STREQUAL "SE")
 	set(ENABLE_SKYRIM_SE ON CACHE BOOL "" FORCE)
 	set(ENABLE_SKYRIM_AE OFF CACHE BOOL "" FORCE)

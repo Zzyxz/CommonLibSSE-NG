@@ -61,15 +61,43 @@ namespace RE
 			void Unk_01(void) override;  // 01
 			void Unk_02(void) override;  // 02
 
+			// The fields follow BSThread, which is 8 bytes larger on VR, so they lie 8 bytes later there
+			// (IDA: BGSSaveLoadManager ctor SE 0x5864C0 / VR 0x58D9F0).
+			struct RUNTIME_DATA
+			{
+#define THREAD_RUNTIME_DATA_CONTENT                                                                                            \
+	bool                                                                    isRunnning;                  /* 50, VR 58 */ \
+	bool                                                                    isBusy;                      /* 51, VR 59 */ \
+	std::uint16_t                                                           pad52;                       /* 52, VR 5A */ \
+	std::uint32_t                                                           pad54;                       /* 54, VR 5C */ \
+	BSEventFlag                                                             haveTask;                    /* 58, VR 60 */ \
+	BSTCommonStaticMessageQueue<BSTSmartPointer<bgs::saveload::Request>, 8> asyncSaveLoadOperationQueue; /* 60, VR 68 */
+
+				THREAD_RUNTIME_DATA_CONTENT
+			};
+			static_assert(sizeof(RUNTIME_DATA) == 0x70);
+
+			[[nodiscard]] RUNTIME_DATA& GetRuntimeData() noexcept
+			{
+				return REL::RuntimeMember<RUNTIME_DATA>(this, 0x50, 0x50, 0x58);
+			}
+
+			[[nodiscard]] const RUNTIME_DATA& GetRuntimeData() const noexcept
+			{
+				return REL::RuntimeMember<RUNTIME_DATA>(this, 0x50, 0x50, 0x58);
+			}
+
 			// members
-			bool                                                                    isRunnning;                   // 50
-			bool                                                                    isBusy;                       // 51
-			std::uint16_t                                                           pad52;                        // 52
-			std::uint32_t                                                           pad54;                        // 54
-			BSEventFlag                                                             haveTask;                     // 58
-			BSTCommonStaticMessageQueue<BSTSmartPointer<bgs::saveload::Request>, 8> asyncSaveLoadOperationQueue;  // 60
+#ifndef SKYRIM_CROSS_VR
+			THREAD_RUNTIME_DATA_CONTENT
+#endif
 		};
+#if defined(ENABLE_SKYRIM_VR) && !defined(ENABLE_SKYRIM_SE) && !defined(ENABLE_SKYRIM_AE)
+		static_assert(sizeof(Thread) == 0xC8);
+#elif !defined(SKYRIM_CROSS_VR)
 		static_assert(sizeof(Thread) == 0xC0);
+#endif
+#undef THREAD_RUNTIME_DATA_CONTENT
 
 		~BGSSaveLoadManager() override;  // 00
 
@@ -175,37 +203,30 @@ namespace RE
 		std::uint32_t unk2A4;  // 2A4
 		std::uint64_t unk2A8;  // 2A8
 
-		// AE adds 0x48 bytes at 0x2B0 (two arrays and a few values), so thread and the queue lie 0x48 later.
-		struct RUNTIME_DATA
+		// AE adds 0x48 bytes at 0x2B0 (two arrays and a few values), so the thread and the request queue lie 0x48
+		// later. On VR the thread starts at 0x2B0 as on SE but is 8 bytes larger, so the queue lies at 0x378.
+		// Verified in IDA: ctor SE 0x5864C0, AE 1.6.1170 0x60F140, AE 1.7.104 0x621BE0, VR 0x58D9F0.
+		[[nodiscard]] Thread& GetThread() noexcept
 		{
-#define RUNTIME_DATA_CONTENT                                                                                   \
-	Thread                                                                   thread; /* 2B0, 2F8 */            \
-	BSTCommonStaticMessageQueue<BSTSmartPointer<bgs::saveload::Request>, 8> unk370; /* 370, 3B8 */
-
-			RUNTIME_DATA_CONTENT
-		};
-		static_assert(sizeof(RUNTIME_DATA) == 0x120);
-
-		[[nodiscard]] RUNTIME_DATA& GetRuntimeData() noexcept
-		{
-			return REL::RuntimeMember<RUNTIME_DATA>(this, 0x2B0, 0x2F8);
+			return REL::RuntimeMember<Thread>(this, 0x2B0, 0x2F8, 0x2B0);
 		}
 
-		[[nodiscard]] const RUNTIME_DATA& GetRuntimeData() const noexcept
+		[[nodiscard]] BSTCommonStaticMessageQueue<BSTSmartPointer<bgs::saveload::Request>, 8>& GetRequestQueue() noexcept
 		{
-			return REL::RuntimeMember<RUNTIME_DATA>(this, 0x2B0, 0x2F8);
+			return REL::RuntimeMember<BSTCommonStaticMessageQueue<BSTSmartPointer<bgs::saveload::Request>, 8>>(this, 0x370, 0x3B8, 0x378);
 		}
 
-#ifndef ENABLE_SKYRIM_AE
-		RUNTIME_DATA_CONTENT
+#if !defined(ENABLE_SKYRIM_AE) && !defined(ENABLE_SKYRIM_VR)
+		Thread thread;  // 2B0
+
+		BSTCommonStaticMessageQueue<BSTSmartPointer<bgs::saveload::Request>, 8> unk370;  // 370
 #endif
 
 	protected:
 		bool Save_Impl(std::int32_t a_deviceID, std::uint32_t a_outputStats, const char* a_fileName);
 		bool Load_Impl(const char* a_fileName, std::int32_t a_deviceID, std::uint32_t a_outputStats, bool a_checkForMods);
 	};
-#ifndef ENABLE_SKYRIM_AE
+#if !defined(ENABLE_SKYRIM_AE) && !defined(ENABLE_SKYRIM_VR)
 	static_assert(sizeof(BGSSaveLoadManager) == 0x3D0);
 #endif
 }
-#undef RUNTIME_DATA_CONTENT
