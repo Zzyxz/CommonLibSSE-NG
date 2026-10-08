@@ -3,6 +3,8 @@
 #include "RE/N/NiObject.h"
 #include "RE/N/NiSmartPointer.h"
 
+#include "REX/W32/BASE.h"
+
 namespace RE
 {
 	class NiAVObject;
@@ -14,7 +16,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_NiSkinInstance;
-		inline static constexpr auto Ni_RTTI = NiRTTI_NiSkinInstance;
+		inline static auto           Ni_RTTI = NiRTTI_NiSkinInstance;
 
 		~NiSkinInstance() override;  // 00
 
@@ -46,7 +48,13 @@ namespace RE
 		void*                      boneMatrices;                  // 48
 		void*                      prevBoneMatrices;              // 50
 		void*                      skinToWorldWorldToSkinMatrix;  // 58
-		WinAPI::CRITICAL_SECTION   lock;                          // 60
+#ifndef ENABLE_SKYRIM_VR
+		REX::W32::CRITICAL_SECTION lock;  // 60
 	};
 	static_assert(sizeof(NiSkinInstance) == 0x88);
+#else
+		std::uint64_t unk60;  // 60 - no lock in VR
+	};
+	static_assert(sizeof(NiSkinInstance) == 0x68);
+#endif
 }

@@ -57,10 +57,10 @@ namespace RE
 		void CopyComponent(BaseFormComponent* a_rhs) override;  // 03
 
 		// add
-		virtual std::uint8_t       GetChanceNone();                                      // 04 - { if (global) return global->value; else return chanceNone; }
-		virtual bool               GetMultCalc();                                        // 05 - { return (flags >> 1) & 1; }`
-		virtual std::int32_t       GetLevDifferenceMax();                                // 06 - { return 0; }
-		[[nodiscard]] virtual bool GetCanContainFormsOfType(FormType a_type) const = 0;  // 07
+		[[nodiscard]] virtual std::uint8_t GetChanceNone();                                      // 04 - { if (global) return global->value; else return chanceNone; }
+		[[nodiscard]] virtual bool         GetMultCalc();                                        // 05 - { return (flags >> 1) & 1; }
+		[[nodiscard]] virtual std::int32_t GetLevDifferenceMax();                                // 06 - { return 0; }
+		[[nodiscard]] virtual bool         GetCanContainFormsOfType(FormType a_type) const = 0;  // 07
 
 		void                                CalculateCurrentFormList(std::uint16_t a_level, std::int16_t a_count, BSScrapArray<CALCED_OBJECT>& a_calcedObjects, std::uint32_t a_arg5, bool a_usePlayerLevel);
 		[[nodiscard]] std::vector<TESForm*> GetContainedForms() const;
@@ -70,7 +70,7 @@ namespace RE
 		std::int8_t                 chanceNone;    // 10 - LVLD
 		Flag                        llFlags;       // 11 - LVLF
 		std::uint8_t                numEntries;    // 12 - LLCT
-		std::uint8_t                unk13;  // 13
+		std::uint8_t                unk13;         // 13
 		std::uint32_t               pad14;         // 14
 		void*                       unk18;         // 18
 		TESGlobal*                  chanceGlobal;  // 20 - LVLG

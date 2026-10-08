@@ -91,7 +91,7 @@ namespace RE
 		void     CreateGroupData(FORM* a_form, FORM_GROUP* a_group) override;                          // 31
 
 		// override (TESChildCell)
-		TESObjectCELL* GetSaveParentCell() override;  // 01 - { return parentCell; }
+		[[nodiscard]] TESObjectCELL* GetSaveParentCell() override;  // 01 - { return parentCell; }
 
 		// members
 		OBJ_LAND              data;            // 28 - DATA

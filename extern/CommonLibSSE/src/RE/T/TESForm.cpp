@@ -5,6 +5,7 @@
 #include "RE/F/FormTraits.h"
 #include "RE/I/IObjectHandlePolicy.h"
 #include "RE/I/InventoryEntryData.h"
+#include "RE/T/TESDataHandler.h"
 #include "RE/T/TESFullName.h"
 #include "RE/T/TESGlobal.h"
 #include "RE/T/TESModel.h"
@@ -37,25 +38,9 @@ namespace RE
 
 	float TESForm::GetWeight() const
 	{
-		const auto survival = []() {
-			const auto dobj = BGSDefaultObjectManager::GetSingleton();
-			const auto survival = dobj ? dobj->GetObject<TESGlobal>(DEFAULT_OBJECT::kSurvivalModeEnabled) : nullptr;
-			return survival ? survival->value == 1.0F : false;
-		};
-
-		const auto ref = As<TESObjectREFR>();
-		const auto baseObj = ref ? ref->GetBaseObject() : nullptr;
-		const auto form = baseObj ? baseObj : this;
-		if (!survival() && (form->IsAmmo() || form->IsLockpick())) {
-			return 0.0F;
-		} else if (const auto weightForm = form->As<TESWeightForm>(); weightForm) {
-			return weightForm->weight;
-		} else if (form->Is(FormType::NPC)) {
-			const auto npc = static_cast<const TESNPC*>(form);
-			return npc->weight;
-		} else {
-			return -1.0F;
-		}
+		using func_t = decltype(&TESForm::GetWeight);
+		REL::Relocation<func_t> func{ RELOCATION_ID(14809, 14988) };
+		return func(this);
 	}
 
 	bool TESForm::HasAnyKeywordByEditorID(const std::vector<std::string>& editorIDs) const
@@ -67,23 +52,27 @@ namespace RE
 		}
 
 		// Iterate through the keywords
-		for (std::uint32_t i = 0; i < keywordForm->GetNumKeywords(); ++i) {
-			auto keywordOpt = keywordForm->GetKeywordAt(i);
-			if (keywordOpt) {
-				auto keyword = *keywordOpt;
-				if (keyword) {
-					const char* keywordEditorID = keyword->GetFormEditorID();
-					if (keywordEditorID) {
-						// Check if the keywordEditorID is in the given editorIDs vector
-						if (std::find(editorIDs.begin(), editorIDs.end(), keywordEditorID) != editorIDs.end()) {
-							return true;
-						}
-					}
-				}
+		bool hasKeyword = false;
+
+		keywordForm->ForEachKeyword([&](const BGSKeyword* a_keyword) {
+			if (std::ranges::find(editorIDs, a_keyword->GetFormEditorID()) != editorIDs.end()) {
+				hasKeyword = true;
+				return BSContainer::ForEachResult::kStop;
 			}
+			return BSContainer::ForEachResult::kContinue;
+		});
+
+		return hasKeyword;
+	}
+
+	bool TESForm::HasKeywordByEditorID(std::string_view a_editorID)
+	{
+		const auto keywordForm = As<BGSKeywordForm>();
+		if (!keywordForm) {
+			return false;
 		}
 
-		return false;
+		return keywordForm->HasKeywordString(a_editorID);
 	}
 
 	bool TESForm::HasKeywordInArray(const std::vector<BGSKeyword*>& a_keywords, bool a_matchAll) const
@@ -97,7 +86,7 @@ namespace RE
 
 		for (const auto& keyword : a_keywords) {
 			hasKeyword = keyword && keywordForm->HasKeyword(keyword);
-			if (a_matchAll && !hasKeyword || hasKeyword) {
+			if ((a_matchAll && !hasKeyword) || hasKeyword) {
 				break;
 			}
 		}
@@ -118,10 +107,10 @@ namespace RE
 
 		bool hasKeyword = false;
 
-		a_keywordList->ForEachForm([&](const TESForm& a_form) {
-			const auto keyword = a_form.As<BGSKeyword>();
+		a_keywordList->ForEachForm([&](const TESForm* a_form) {
+			const auto keyword = a_form->As<BGSKeyword>();
 			hasKeyword = keyword && keywordForm->HasKeyword(keyword);
-			if (a_matchAll && !hasKeyword || hasKeyword) {
+			if ((a_matchAll && !hasKeyword) || hasKeyword) {
 				return BSContainer::ForEachResult::kStop;
 			}
 			return BSContainer::ForEachResult::kContinue;
@@ -151,6 +140,55 @@ namespace RE
 		return As<TESModel>() != nullptr;
 	}
 
+	FormID TESForm::GetRawFormID() const
+	{
+		const auto* modFile = GetFile(0);
+		if (!modFile) {
+			return 0;
+		}
+
+		const auto* expectedFile = (formID & 0xFF000000) == 0xFE000000 ?
+                                       TESDataHandler::GetSingleton()->LookupLoadedLightModByIndex(
+										   static_cast<uint16_t>((0x00FFF000 & formID) >> 12)) :
+                                       TESDataHandler::GetSingleton()->LookupLoadedModByIndex(
+										   static_cast<uint8_t>((0xFF000000 & formID) >> 24));
+
+		std::uint32_t fullMasters = 0;
+		std::uint32_t smallMasters = 0;
+
+		if SKYRIM_REL_VR_CONSTEXPR (REL::Module::IsVR()) {
+			for (std::uint32_t i = 0; i < modFile->masterCount; ++i) {
+				const auto* master = modFile->masterPtrs[i];
+				if (master == expectedFile) {
+					return (fullMasters << 24) | (formID & 0x00FFFFFF);
+				}
+				++fullMasters;
+			}
+			return (formID & 0x00FFFFFF) | (fullMasters << 24);
+		} else {
+			for (std::uint32_t i = 0; i < modFile->masterCount; ++i) {
+				const auto* master = modFile->masterPtrs[i];
+				if (master == expectedFile) {
+					if (master->compileIndex == 0xFE) {
+						return 0xFE000000 | (smallMasters << 12) | (formID & 0x00000FFF);
+					} else {
+						return (fullMasters << 24) | (formID & 0x00FFFFFF);
+					}
+				}
+				if (master->compileIndex == 0xFE) {
+					++smallMasters;
+				} else {
+					++fullMasters;
+				}
+			}
+			if (modFile->compileIndex == 0xFE) {
+				return (formID & 0x00000FFF) | 0xFE000000 | (smallMasters << 12);
+			} else {
+				return (formID & 0x00FFFFFF) | (fullMasters << 24);
+			}
+		}
+	}
+
 	bool TESForm::IsInventoryObject() const
 	{
 		switch (GetFormType()) {
@@ -173,5 +211,12 @@ namespace RE
 		default:
 			return false;
 		}
+	}
+
+	void TESForm::SetPlayerKnows(bool a_known)
+	{
+		using func_t = decltype(&TESForm::SetPlayerKnows);
+		REL::Relocation<func_t> func{ RELOCATION_ID(14482, 14639) };
+		return func(this, a_known);
 	}
 }

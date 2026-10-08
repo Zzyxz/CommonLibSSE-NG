@@ -66,7 +66,7 @@ namespace RE
 
 		float GetMass()
 		{
-			float mass = inertiaAndMassInv.quad.m128_f32[3];
+			float mass = reinterpret_cast<float*>(&inertiaAndMassInv.quad)[3];
 			if (mass != 0.0f) {
 				return 1.0f / mass;
 			}

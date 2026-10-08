@@ -14,15 +14,15 @@ namespace RE
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraReferenceHandle;
 		inline static constexpr auto VTABLE = VTABLE_ExtraReferenceHandle;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kReferenceHandle;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kReferenceHandle;
 
 		ExtraReferenceHandle();
 		explicit ExtraReferenceHandle(ObjectRefHandle a_containerRef);
-		virtual ~ExtraReferenceHandle() = default;  // 00
+		~ExtraReferenceHandle() override = default;  // 00
 
 		// override (BSExtraData)
-		virtual ExtraDataType GetType() const override;                             // 01 - { return kReferenceHandle; }
-		virtual bool          IsNotEqual(const BSExtraData* a_rhs) const override;  // 02 - { return containerRef != a_rhs->containerRef; }
+		ExtraDataType GetType() const override;                             // 01 - { return kReferenceHandle; }
+		bool          IsNotEqual(const BSExtraData* a_rhs) const override;  // 02 - { return containerRef != a_rhs->containerRef; }
 
 		NiPointer<TESObjectREFR> GetOriginalReference();
 

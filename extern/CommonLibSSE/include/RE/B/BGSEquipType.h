@@ -32,7 +32,6 @@ namespace RE
 
 		// members
 		BGSEquipSlot* equipSlot;  // 08 - ETYP
-		//EQUIPPED_ITEM_TYPE equipType;
 	};
 	static_assert(sizeof(BGSEquipType) == 0x10);
 }

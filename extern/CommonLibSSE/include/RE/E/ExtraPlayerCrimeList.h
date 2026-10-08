@@ -12,12 +12,12 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraPlayerCrimeList;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kPlayerCrimeList;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kPlayerCrimeList;
 
-		virtual ~ExtraPlayerCrimeList();  // 00
+		~ExtraPlayerCrimeList() override;  // 00
 
 		// override (BSExtraData)
-		virtual ExtraDataType GetType() const override;  // 01 - { return kPlayerCrimeList; }
+		ExtraDataType GetType() const override;  // 01 - { return kPlayerCrimeList; }
 
 		// members
 		BSSimpleList<Crime*>* crimes;  // 10

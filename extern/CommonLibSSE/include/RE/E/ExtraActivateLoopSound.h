@@ -10,12 +10,12 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraActivateLoopSound;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kActivateLoopSound;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kActivateLoopSound;
 
-		virtual ~ExtraActivateLoopSound();  // 00
+		~ExtraActivateLoopSound() override;  // 00
 
 		// override (BSExtraData)
-		virtual ExtraDataType GetType() const override;  // 01 - { return kActivateLoopSound; }
+		ExtraDataType GetType() const override;  // 01 - { return kActivateLoopSound; }
 
 		// members
 		BSSoundHandle handle;  // 10

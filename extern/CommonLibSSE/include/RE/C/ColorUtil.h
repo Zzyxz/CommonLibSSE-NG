@@ -60,27 +60,27 @@ namespace RE
 					std::floor(a_rhs.blue));
 			}
 
-			inline NiColor min(const NiColor& a_lhs, const NiColor& a_rhs)
+			inline NiColor (min)(const NiColor& a_lhs, const NiColor& a_rhs)
 			{
 				return NiColor(
-					std::min(a_lhs.red, a_rhs.red),
-					std::min(a_lhs.green, a_rhs.green),
-					std::min(a_lhs.blue, a_rhs.blue));
+					(std::min)(a_lhs.red, a_rhs.red),
+					(std::min)(a_lhs.green, a_rhs.green),
+					(std::min)(a_lhs.blue, a_rhs.blue));
 			}
 
-			inline NiColor max(const NiColor& a_lhs, const NiColor& a_rhs)
+			inline NiColor (max)(const NiColor& a_lhs, const NiColor& a_rhs)
 			{
 				return NiColor(
-					std::max(a_lhs.red, a_rhs.red),
-					std::max(a_lhs.green, a_rhs.green),
-					std::max(a_lhs.blue, a_rhs.blue));
+					(std::max)(a_lhs.red, a_rhs.red),
+					(std::max)(a_lhs.green, a_rhs.green),
+					(std::max)(a_lhs.blue, a_rhs.blue));
 			}
 
 			// BLEND MODES
 
 			inline NiColor darken(const NiColor& a_src, const NiColor& a_dest)
 			{
-				return min(a_src, a_dest);
+				return (min)(a_src, a_dest);
 			}
 
 			inline NiColor multiply(const NiColor& a_src, const NiColor& a_dest)
@@ -105,7 +105,7 @@ namespace RE
 
 			inline NiColor lighten(const NiColor& a_src, const NiColor& a_dest)
 			{
-				return max(a_src, a_dest);
+				return (max)(a_src, a_dest);
 			}
 
 			inline NiColor screen(const NiColor& a_src, const NiColor& a_dest)
@@ -141,7 +141,7 @@ namespace RE
 			inline float softLight(float a_src, float a_dest)
 			{
 				return (a_src < 0.5f) ? a_dest - (1.0f - 2.0f * a_src) * a_dest * (1.0f - a_dest) : (a_dest < 0.25f) ? a_dest + (2.0f * a_src - 1.0f) * a_dest * ((16.0f * a_dest - 12.0f) * a_dest + 3.0f) :
-                                                                                                                       a_dest + (2.0f * a_src - 1.0f) * (sqrt(a_dest) - a_dest);
+				                                                                                                       a_dest + (2.0f * a_src - 1.0f) * (sqrt(a_dest) - a_dest);
 			}
 
 			inline NiColor softLight(const NiColor& a_src, const NiColor& a_dest)
@@ -177,7 +177,7 @@ namespace RE
 			inline float pinLight(float a_src, float a_dest)
 			{
 				return (2.0f * a_src - 1.0f > a_dest) ? 2.0f * a_src - 1.0f : (a_src < 0.5f * a_dest) ? 2.0f * a_src :
-                                                                                                        a_dest;
+				                                                                                        a_dest;
 			}
 
 			inline NiColor pinLight(const NiColor& a_src, const NiColor& a_dest)

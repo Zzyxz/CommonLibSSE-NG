@@ -19,13 +19,13 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraWaterCurrentZoneData;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kWaterCurrentZoneData;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kWaterCurrentZoneData;
 
-		virtual ~ExtraWaterCurrentZoneData();  // 00
+		~ExtraWaterCurrentZoneData() override;  // 00
 
 		// override (BSExtraData)
-		virtual ExtraDataType GetType() const override;                             // 01 - { return kWaterCurrentZoneData; }
-		virtual bool          IsNotEqual(const BSExtraData* a_rhs) const override;  // 02
+		ExtraDataType GetType() const override;                             // 01 - { return kWaterCurrentZoneData; }
+		bool          IsNotEqual(const BSExtraData* a_rhs) const override;  // 02
 
 		// members
 		BSTHashMap<ObjectRefHandle, BSCurrent::Action*> referenceToActionMap;  // 10

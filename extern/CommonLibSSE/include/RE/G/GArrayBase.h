@@ -10,9 +10,9 @@ namespace RE
 	class GArrayBase
 	{
 	public:
-		using ValueType = T::ValueType;
-		using AllocatorType = T::AllocatorType;
-		using SizePolicyType = T::SizePolicyType;
+		using ValueType = typename T::ValueType;
+		using AllocatorType = typename T::AllocatorType;
+		using SizePolicyType = typename T::SizePolicyType;
 		using SelfType = GArrayBase<T>;
 
 		struct iterator

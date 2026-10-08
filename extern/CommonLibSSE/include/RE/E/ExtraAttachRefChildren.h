@@ -11,12 +11,12 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraAttachRefChildren;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kAttachRefChildren;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kAttachRefChildren;
 
-		virtual ~ExtraAttachRefChildren();  // 00
+		~ExtraAttachRefChildren() override;  // 00
 
 		// override (BSExtraData)
-		virtual ExtraDataType GetType() const override;  // 01 - { return kAttachRefChildren; }
+		ExtraDataType GetType() const override;  // 01 - { return kAttachRefChildren; }
 
 		// members
 		BSSimpleList<ObjectRefHandle> children;  // 10

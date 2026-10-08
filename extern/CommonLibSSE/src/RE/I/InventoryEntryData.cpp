@@ -38,8 +38,8 @@ namespace RE
 			delete extraLists;
 			extraLists =
 				a_rhs.extraLists ?
-                    new BSSimpleList<ExtraDataList*>(*a_rhs.extraLists) :
-                    nullptr;
+					new BSSimpleList<ExtraDataList*>(*a_rhs.extraLists) :
+					nullptr;
 
 			countDelta = a_rhs.countDelta;
 		}
@@ -245,9 +245,15 @@ namespace RE
 
 	bool InventoryEntryData::IsQuestObject() const
 	{
-		using func_t = decltype(&InventoryEntryData::IsQuestObject);
-		REL::Relocation<func_t> func{ RELOCATION_ID(15767, 16005) };
-		return func(this);
+		if (extraLists) {
+			for (const auto& xList : *extraLists) {
+				if (xList && xList->HasQuestObjectAlias()) {
+					return true;
+				}
+			}
+		}
+
+		return false;
 	}
 
 	void InventoryEntryData::PoisonObject(AlchemyItem* a_alchItem, std::uint32_t a_count)

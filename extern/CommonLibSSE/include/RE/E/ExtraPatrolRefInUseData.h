@@ -9,13 +9,13 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraPatrolRefInUseData;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kPatrolRefInUseData;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kPatrolRefInUseData;
 
-		virtual ~ExtraPatrolRefInUseData();  // 00
+		~ExtraPatrolRefInUseData() override;  // 00
 
 		// override (BSExtraData)
-		virtual ExtraDataType GetType() const override;                             // 01 - { reutrn kPatrolRefInUseData; }
-		virtual bool          IsNotEqual(const BSExtraData* a_rhs) const override;  // 02 - { return user != a_rhs->user; }
+		ExtraDataType GetType() const override;                             // 01 - { reutrn kPatrolRefInUseData; }
+		bool          IsNotEqual(const BSExtraData* a_rhs) const override;  // 02 - { return user != a_rhs->user; }
 
 		// members
 		std::uint32_t user;   // 10

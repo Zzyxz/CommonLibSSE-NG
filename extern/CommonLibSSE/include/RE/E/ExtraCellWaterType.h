@@ -11,7 +11,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraCellWaterType;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kCellWaterType;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kCellWaterType;
 
 		~ExtraCellWaterType() override;  // 00
 

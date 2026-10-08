@@ -11,12 +11,12 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraDroppedItemList;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kDroppedItemList;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kDroppedItemList;
 
-		virtual ~ExtraDroppedItemList();  // 00
+		~ExtraDroppedItemList() override;  // 00
 
 		// override (BSExtraData)
-		virtual ExtraDataType GetType() const override;  // 01 { return kDroppedItemList; }
+		ExtraDataType GetType() const override;  // 01 { return kDroppedItemList; }
 
 		// members
 		BSSimpleList<ObjectRefHandle> droppedItemList;  // 10

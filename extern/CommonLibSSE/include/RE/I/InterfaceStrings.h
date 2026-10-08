@@ -11,84 +11,126 @@ namespace RE
 		static InterfaceStrings* GetSingleton();
 
 		// members
-		std::uint8_t  pad001;                   // 001
-		std::uint16_t pad002;                   // 002
-		std::uint32_t pad004;                   // 004
-		BSFixedString faderData;                // 008 - "FaderData"
-		BSFixedString hudData;                  // 010 - "HUDData"
-		BSFixedString hudCamData;               // 018 - "HUDCamData"
-		BSFixedString floatingQuestMarkers;     // 020 - "FloatingQuestMarkers"
-		BSFixedString consoleData;              // 028 - "ConsoleData"
-		BSFixedString quantityData;             // 030 - "QuantityData"
-		BSFixedString messageBoxData;           // 038 - "MessageBoxData"
-		BSFixedString bsUIScaleformData;        // 040 - "BSUIScaleformData"
-		BSFixedString bsUIMessageData;          // 048 - "BSUIMessageData"
-		BSFixedString bsUIAnalogData;           // 050 - "BSUIAnalogData"
-		BSFixedString inventoryUpdateData;      // 058 - "InventoryUpdateData"
-		BSFixedString refHandleUIData;          // 060 - "RefHandleUIData"
-		BSFixedString tesFormUIData;            // 068 - "TESFormUIData"
-		BSFixedString loadingMenuData;          // 070 - "LoadingMenuData"
-		BSFixedString kinectStateData;          // 078 - "KinectStateChangeData"
-		BSFixedString kinectUserEventData;      // 080 - "KinectUserEventData"
-		BSFixedString inventoryMenu;            // 088 - "InventoryMenu"
-		BSFixedString console;                  // 090 - "Console"
-		BSFixedString dialogueMenu;             // 098 - "Dialogue Menu"
-		BSFixedString hudMenu;                  // 0A0 - "HUD Menu"
-		BSFixedString mainMenu;                 // 0A8 - "Main Menu"
-		BSFixedString messageBoxMenu;           // 0B0 - "MessageBoxMenu"
-		BSFixedString cursorMenu;               // 0B8 - "Cursor Menu"
-		BSFixedString faderMenu;                // 0C0 - "Fader Menu"
-		BSFixedString magicMenu;                // 0C8 - "MagicMenu"
-		BSFixedString topMenu;                  // 0D0 - "Top Menu"
-		BSFixedString overlayMenu;              // 0D8 - "Overlay Menu"
-		BSFixedString overlayInteractionMenu;   // 0E0 - "Overlay Interaction Menu"
-		BSFixedString loadingMenu;              // 0E8 - "Loading Menu"
-		BSFixedString tweenMenu;                // 0F0 - "TweenMenu"
-		BSFixedString barterMenu;               // 0F8 - "BarterMenu"
-		BSFixedString giftMenu;                 // 100 - "GiftMenu"
-		BSFixedString debugTextMenu;            // 108 - "Debug Text Menu"
-		BSFixedString mapMenu;                  // 110 - "MapMenu"
-		BSFixedString lockpickingMenu;          // 118 - "Lockpicking Menu"
-		BSFixedString quantityMenu;             // 120 - "Quantity Menu"
-		BSFixedString statsMenu;                // 128 - "StatsMenu"
-		BSFixedString containerMenu;            // 130 - "ContainerMenu"
-		BSFixedString sleepWaitMenu;            // 138 - "Sleep/Wait Menu"
-		BSFixedString levelUpMenu;              // 140 - "LevelUp Menu"
-		BSFixedString journalMenu;              // 148 - "Journal Menu"
-		BSFixedString bookMenu;                 // 150 - "Book Menu"
-		BSFixedString favoritesMenu;            // 158 - "FavoritesMenu"
-		BSFixedString raceSexMenu;              // 160 - "RaceSex Menu"
-		BSFixedString craftingMenu;             // 168 - "Crafting Menu"
-		BSFixedString trainingMenu;             // 170 - "Training Menu"
-		BSFixedString mistMenu;                 // 178 - "Mist Menu"
-		BSFixedString tutorialMenu;             // 180 - "Tutorial Menu"
-		BSFixedString creditsMenu;              // 188 - "Credits Menu"
-		BSFixedString modManagerMenu;           // 190 - "Mod Manager Menu"
-		BSFixedString creationClubMenu;         // 198 - "Creation Club Menu"
-		BSFixedString titleSequenceMenu;        // 1A0 - "TitleSequence Menu"
-		BSFixedString consoleNativeUIMenu;      // 1A8 - "Console Native UI Menu"
-		BSFixedString kinectMenu;               // 1B0 - "Kinect Menu"
-		BSFixedString loadWaitSpinner;          // 1B8 - "LoadWaitSpinner"
-		BSFixedString streamingInstallMenu;     // 1C0 - "StreamingInstallMenu"
-		BSFixedString textWidget;               // 1C8 - "TextWidget"
-		BSFixedString buttonBarWidget;          // 1D0 - "ButtonBarWidget"
-		BSFixedString graphWidget;              // 1D8 - "GraphWidget"
-		BSFixedString textureWidget;            // 1E0 - "TextureWidget"
-		BSFixedString uiMenuOK;                 // 1E8 - "UIMenuOK"
-		BSFixedString uiMenuCancel;             // 1F0 - "UIMenuCancel"
-		BSFixedString showText;                 // 1F8 - "Show Text"
-		BSFixedString hideText;                 // 200 - "Hide Text"
-		BSFixedString showList;                 // 208 - "Show List"
-		BSFixedString voiceReady;               // 210 - "Voice Ready"
-		BSFixedString dmfoStr;                  // 218 - "DMFOStr"
-		BSFixedString showJournal;              // 220 - "Show Journal"
-		BSFixedString journalSettingsSaved;     // 228 - "Journal Settings Saved"
-		BSFixedString closeMenu;                // 230 - "CloseMenu"
-		BSFixedString closingAllMenus;          // 238 - "Closing All Menus"
-		BSFixedString refreshMenu;              // 240 - "RefreshMenu"
-		BSFixedString cancelLoading;            // 248 - "CancelLoading"
-		BSFixedString menuTextureDegradeEvent;  // 250 - "Menu Texture Degrade Event"
-		BSFixedString diamondMarker;            // 258 - "<img src='DiamondMarker' width='10' height='15' align='baseline' vspace='5'>"
+		std::uint8_t  pad001;                  // 001
+		std::uint16_t pad002;                  // 002
+		std::uint32_t pad004;                  // 004
+		BSFixedString faderData;               // 008 - "FaderData"
+		BSFixedString hudData;                 // 010 - "HUDData"
+		BSFixedString hudCamData;              // 018 - "HUDCamData"
+		BSFixedString floatingQuestMarkers;    // 020 - "FloatingQuestMarkers"
+		BSFixedString consoleData;             // 028 - "ConsoleData"
+		BSFixedString quantityData;            // 030 - "QuantityData"
+		BSFixedString messageBoxData;          // 038 - "MessageBoxData"
+		BSFixedString bsUIScaleformData;       // 040 - "BSUIScaleformData"
+		BSFixedString bsUIMessageData;         // 048 - "BSUIMessageData"
+		BSFixedString bsUIAnalogData;          // 050 - "BSUIAnalogData"
+		BSFixedString inventoryUpdateData;     // 058 - "InventoryUpdateData"
+		BSFixedString refHandleUIData;         // 060 - "RefHandleUIData"
+		BSFixedString tesFormUIData;           // 068 - "TESFormUIData"
+		BSFixedString loadingMenuData;         // 070 - "LoadingMenuData"
+		BSFixedString kinectStateData;         // 078 - "KinectStateChangeData"
+		BSFixedString kinectUserEventData;     // 080 - "KinectUserEventData"
+		BSFixedString inventoryMenu;           // 088 - "InventoryMenu"
+		BSFixedString console;                 // 090 - "Console"
+		BSFixedString dialogueMenu;            // 098 - "Dialogue Menu"
+		BSFixedString hudMenu;                 // 0A0 - "HUD Menu"
+		BSFixedString mainMenu;                // 0A8 - "Main Menu"
+		BSFixedString messageBoxMenu;          // 0B0 - "MessageBoxMenu"
+		BSFixedString cursorMenu;              // 0B8 - "Cursor Menu"
+		BSFixedString faderMenu;               // 0C0 - "Fader Menu"
+		BSFixedString magicMenu;               // 0C8 - "MagicMenu"
+		BSFixedString topMenu;                 // 0D0 - "Top Menu"
+		BSFixedString overlayMenu;             // 0D8 - "Overlay Menu"
+		BSFixedString overlayInteractionMenu;  // 0E0 - "Overlay Interaction Menu"
+		BSFixedString loadingMenu;             // 0E8 - "Loading Menu"
+		BSFixedString tweenMenu;               // 0F0 - "TweenMenu"
+		BSFixedString barterMenu;              // 0F8 - "BarterMenu"
+		BSFixedString giftMenu;                // 100 - "GiftMenu"
+		BSFixedString debugTextMenu;           // 108 - "Debug Text Menu"
+		BSFixedString mapMenu;                 // 110 - "MapMenu"
+		BSFixedString lockpickingMenu;         // 118 - "Lockpicking Menu"
+		BSFixedString quantityMenu;            // 120 - "Quantity Menu"
+		BSFixedString statsMenu;               // 128 - "StatsMenu"
+		BSFixedString containerMenu;           // 130 - "ContainerMenu"
+		BSFixedString sleepWaitMenu;           // 138 - "Sleep/Wait Menu"
+		BSFixedString levelUpMenu;             // 140 - "LevelUp Menu"
+		BSFixedString journalMenu;             // 148 - "Journal Menu"
+		BSFixedString bookMenu;                // 150 - "Book Menu"
+		BSFixedString favoritesMenu;           // 158 - "FavoritesMenu"
+		BSFixedString raceSexMenu;             // 160 - "RaceSex Menu"
+		BSFixedString craftingMenu;            // 168 - "Crafting Menu"
+		BSFixedString trainingMenu;            // 170 - "Training Menu"
+		BSFixedString mistMenu;                // 178 - "Mist Menu"
+		BSFixedString tutorialMenu;            // 180 - "Tutorial Menu"
+		BSFixedString creditsMenu;             // 188 - "Credits Menu"
+		BSFixedString modManagerMenu;          // 190 - "Mod Manager Menu"
+		BSFixedString creationClubMenu;        // 198 - "Creation Club Menu"
+		// AE inserts "Marketplace Menu" at 0x1A0 and two strings after menuTextureDegradeEvent, so the strings
+		// from titleSequenceMenu on lie 8 bytes later, diamondMarker 0x18 bytes later.
+		struct RUNTIME_DATA
+		{
+#define RUNTIME_DATA_CONTENT \
+	BSFixedString titleSequenceMenu; /* 1A0, 1A8 - "TitleSequence Menu" */               \
+	BSFixedString consoleNativeUIMenu; /* 1A8, 1B0 - "Console Native UI Menu" */         \
+	BSFixedString kinectMenu; /* 1B0, 1B8 - "Kinect Menu" */                             \
+	BSFixedString loadWaitSpinner; /* 1B8, 1C0 - "LoadWaitSpinner" */                    \
+	BSFixedString streamingInstallMenu; /* 1C0, 1C8 - "StreamingInstallMenu" */          \
+	BSFixedString textWidget; /* 1C8, 1D0 - "TextWidget" */                              \
+	BSFixedString buttonBarWidget; /* 1D0, 1D8 - "ButtonBarWidget" */                    \
+	BSFixedString graphWidget; /* 1D8, 1E0 - "GraphWidget" */                            \
+	BSFixedString textureWidget; /* 1E0, 1E8 - "TextureWidget" */                        \
+	BSFixedString uiMenuOK; /* 1E8, 1F0 - "UIMenuOK" */                                  \
+	BSFixedString uiMenuCancel; /* 1F0, 1F8 - "UIMenuCancel" */                          \
+	BSFixedString showText; /* 1F8, 200 - "Show Text" */                                 \
+	BSFixedString hideText; /* 200, 208 - "Hide Text" */                                 \
+	BSFixedString showList; /* 208, 210 - "Show List" */                                 \
+	BSFixedString voiceReady; /* 210, 218 - "Voice Ready" */                             \
+	BSFixedString dmfoStr; /* 218, 220 - "DMFOStr" */                                    \
+	BSFixedString showJournal; /* 220, 228 - "Show Journal" */                           \
+	BSFixedString journalSettingsSaved; /* 228, 230 - "Journal Settings Saved" */        \
+	BSFixedString closeMenu; /* 230, 238 - "CloseMenu" */                                \
+	BSFixedString closingAllMenus; /* 238, 240 - "Closing All Menus" */                  \
+	BSFixedString refreshMenu; /* 240, 248 - "RefreshMenu" */                            \
+	BSFixedString cancelLoading; /* 248, 250 - "CancelLoading" */                        \
+	BSFixedString menuTextureDegradeEvent; /* 250, 258 - "Menu Texture Degrade Event" */
+
+			RUNTIME_DATA_CONTENT
+		};
+		static_assert(sizeof(RUNTIME_DATA) == 0xB8);
+
+		[[nodiscard]] RUNTIME_DATA& GetRuntimeData() noexcept
+		{
+			return REL::RuntimeMember<RUNTIME_DATA>(this, 0x1A0, 0x1A8);
+		}
+
+		[[nodiscard]] const RUNTIME_DATA& GetRuntimeData() const noexcept
+		{
+			return REL::RuntimeMember<RUNTIME_DATA>(this, 0x1A0, 0x1A8);
+		}
+
+		// "Marketplace Menu", "UserSettingsLoaded", "ActivityStarted": AE only, nullptr on SE.
+		[[nodiscard]] const BSFixedString* GetMarketplaceMenu() const noexcept { return GetAEOnly(0x1A0); }
+		[[nodiscard]] const BSFixedString* GetUserSettingsLoaded() const noexcept { return GetAEOnly(0x260); }
+		[[nodiscard]] const BSFixedString* GetActivityStarted() const noexcept { return GetAEOnly(0x268); }
+
+		[[nodiscard]] const BSFixedString& GetDiamondMarker() const noexcept
+		{
+			return REL::RuntimeMember<BSFixedString>(this, 0x258, 0x270);
+		}
+
+#ifndef ENABLE_SKYRIM_AE
+		RUNTIME_DATA_CONTENT
+		BSFixedString diamondMarker;  // 258 - "<img src='DiamondMarker' width='10' height='15' align='baseline' vspace='5'>"
+#endif
+
+	private:
+		[[nodiscard]] const BSFixedString* GetAEOnly(std::ptrdiff_t a_offset) const noexcept
+		{
+			return REL::Module::IsAE() ? std::addressof(REL::RelocateMember<BSFixedString>(this, a_offset)) : nullptr;
+		}
 	};
+#ifndef ENABLE_SKYRIM_AE
 	static_assert(sizeof(InterfaceStrings) == 0x260);
+#endif
 }
+#undef RUNTIME_DATA_CONTENT

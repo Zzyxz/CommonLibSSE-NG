@@ -3,6 +3,7 @@
 
 #include <spdlog/sinks/basic_file_sink.h>
 
+#include <filesystem>
 #include <memory>
 
 namespace logger = SKSE::log;
@@ -25,10 +26,11 @@ namespace
 	}
 }
 
-#ifdef SKYRIM_SUPPORT_AE
+// One DLL for SE and AE: AE SKSE reads SKSEPlugin_Version, SE SKSE calls SKSEPlugin_Query.
+// NG selects every layout that differs between SE and AE at runtime, so no struct restriction is needed.
 extern "C" __declspec(dllexport) constinit auto SKSEPlugin_Version = []() {
 	SKSE::PluginVersionData version;
-	version.PluginVersion(1);
+	version.PluginVersion(REL::Version{ 1, 0, 0, 0 });
 	version.PluginName(TEMPLATE_PLUGIN_NAME);
 	version.AuthorName(TEMPLATE_PLUGIN_AUTHOR);
 	version.UsesAddressLibrary();
@@ -36,24 +38,30 @@ extern "C" __declspec(dllexport) constinit auto SKSEPlugin_Version = []() {
 	version.UsesNoStructs();
 	return version;
 }();
-#endif
 
-extern "C" __declspec(dllexport) bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface* skse, SKSE::PluginInfo* info)
+extern "C" __declspec(dllexport) bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface* a_skse, SKSE::PluginInfo* a_info)
 {
-	if (skse->IsEditor()) {
-		return false;
-	}
-
-	info->infoVersion = SKSE::PluginInfo::kVersion;
-	info->name = TEMPLATE_PLUGIN_NAME;
-	info->version = 1;
-	return true;
+	a_info->infoVersion = SKSE::PluginInfo::kVersion;
+	a_info->name = TEMPLATE_PLUGIN_NAME;
+	a_info->version = 1;
+	return !a_skse->IsEditor() && a_skse->RuntimeVersion() == SKSE::RUNTIME_SSE_1_5_97;
 }
 
-extern "C" __declspec(dllexport) bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* skse)
+extern "C" __declspec(dllexport) bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_skse)
 {
 	initialize_log();
-	SKSE::Init(skse);
-	logger::info("{} loaded for runtime {}.", TEMPLATE_PLUGIN_NAME, skse->RuntimeVersion().string());
+
+	// Checked before SKSE::Init, which ends the game when the Address Library file is missing.
+	const auto runtime = a_skse->RuntimeVersion();
+	const auto library = std::filesystem::path("Data/SKSE/Plugins") / REL::Module::AddressLibraryFileName(runtime);
+	const auto fallback = std::filesystem::path("Data/SKSE/Plugins/AddressLibV2") / REL::Module::AddressLibraryFileName(runtime);
+	std::error_code ec;
+	if (!std::filesystem::exists(library, ec) && !std::filesystem::exists(fallback, ec)) {
+		logger::warn("Address Library for SKSE Plugins is missing for {}; plugin inactive.", runtime.string());
+		return true;
+	}
+
+	SKSE::Init(a_skse);
+	logger::info("{} loaded for runtime {}.", TEMPLATE_PLUGIN_NAME, runtime.string());
 	return true;
 }

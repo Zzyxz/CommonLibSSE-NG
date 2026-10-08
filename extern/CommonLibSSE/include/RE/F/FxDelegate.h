@@ -35,10 +35,10 @@ namespace RE
 		using CallbackHash = GHash<GString, CallbackDefn, CallbackHashFunctor>;
 
 		FxDelegate() = default;
-		virtual ~FxDelegate() = default;  // 00
+		~FxDelegate() override = default;  // 00
 
 		// override (GFxExternalInterface)
-		virtual void Callback(GFxMovieView* a_movieView, const char* a_methodName, const GFxValue* a_args, std::uint32_t a_argCount) override;  // 01
+		void Callback(GFxMovieView* a_movieView, const char* a_methodName, const GFxValue* a_args, std::uint32_t a_argCount) override;  // 01
 
 		static void Invoke(GFxMovieView* a_movieView, const char* a_methodName, FxResponseArgsBase& a_args);  // Call a method registered with the AS2 GameDelegate instance
 		static void Invoke2(GFxMovieView* a_movieView, const char* a_methodName, FxResponseArgsBase& a_args);

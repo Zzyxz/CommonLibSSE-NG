@@ -245,8 +245,8 @@ namespace RE
 	{
 	private:
 		// members
-		GHeapAllocEngine*  _engine;        // C8
-		GHeapDebugStorage* _debugStorage;  // D0
+		[[maybe_unused]] GHeapAllocEngine*  _engine;        // C8
+		[[maybe_unused]] GHeapDebugStorage* _debugStorage;  // D0
 	};
 	static_assert(sizeof(GMemoryHeapPT) == 0xD8);
 }

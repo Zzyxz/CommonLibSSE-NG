@@ -9,7 +9,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraAlphaCutoff;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kAlphaCutoff;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kAlphaCutoff;
 
 		~ExtraAlphaCutoff() override;  // 00
 

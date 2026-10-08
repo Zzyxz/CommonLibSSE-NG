@@ -1,12 +1,14 @@
 #pragma once
 
+#include "REX/W32/BASE.h"
+
 namespace RE
 {
 	class BSCriticalSection
 	{
 	public:
 		// members
-		WinAPI::CRITICAL_SECTION criticalSection;  // 00
+		REX::W32::CRITICAL_SECTION criticalSection;  // 00
 	};
 	static_assert(sizeof(BSCriticalSection) == 0x28);
 
@@ -83,8 +85,8 @@ namespace RE
 
 	private:
 		// members
-		volatile std::uint32_t _writerThread;  // 0
-		volatile std::uint32_t _lock;          // 4
+		[[maybe_unused]] volatile std::uint32_t _writerThread;  // 0
+		[[maybe_unused]] volatile std::uint32_t _lock;          // 4
 	};
 	static_assert(sizeof(BSReadWriteLock) == 0x8);
 

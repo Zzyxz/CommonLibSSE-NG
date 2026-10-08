@@ -11,7 +11,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_bhkRefObject;
-		inline static constexpr auto Ni_RTTI = NiRTTI_bhkRefObject;
+		inline static auto           Ni_RTTI = NiRTTI_bhkRefObject;
 
 		~bhkRefObject() override;  // 00
 

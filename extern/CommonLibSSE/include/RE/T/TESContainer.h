@@ -2,7 +2,6 @@
 
 #include "RE/B/BSContainer.h"
 #include "RE/B/BaseFormComponent.h"
-#include "RE/B/BGSKeyword.h"
 #include "RE/C/ContainerItemExtra.h"
 
 #include "RE/M/MemoryManager.h"
@@ -60,15 +59,11 @@ namespace RE
 		bool                            AddObjectsToContainer(std::map<TESBoundObject*, std::int32_t>& a_objects, TESForm* a_owner);
 		std::int32_t                    CountObjectsInContainer(TESBoundObject* a_object) const;
 		bool                            RemoveObjectFromContainer(TESBoundObject* a_object, std::int32_t a_count);
-		bool                            RemoveAllObjectFromContainer();
-		std::int32_t                    RemoveObjectInstancesFromContainer(TESBoundObject* a_object);
-		bool							RemoveObjectFromContainerByKeyword(RE::BGSKeyword* a_keyword);
-
 
 		// members
 		ContainerObject** containerObjects;     // 08
 		std::uint32_t     numContainerObjects;  // 10
-		std::uint32_t     pad14;                // 14
+		bool              allowStolenItems;     // 14 - new in 1.6.1130
 
 	private:
 		void CopyObjectList(const std::vector<ContainerObject*>& a_copiedData);

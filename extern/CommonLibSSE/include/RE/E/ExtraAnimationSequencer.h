@@ -13,12 +13,12 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraAnimationSequencer;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kAnimationSequencer;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kAnimationSequencer;
 
-		virtual ~ExtraAnimationSequencer();  // 00
+		~ExtraAnimationSequencer() override;  // 00
 
 		// override (BSExtraData)
-		virtual ExtraDataType GetType() const override;  // 01 - { return kAnimationSequencer; }
+		ExtraDataType GetType() const override;  // 01 - { return kAnimationSequencer; }
 
 		// members
 		BGSAnimationSequencer* sequencer;  // 10

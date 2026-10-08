@@ -19,13 +19,13 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraStartingPosition;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kStartingPosition;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kStartingPosition;
 
-		virtual ~ExtraStartingPosition();  // 00
+		~ExtraStartingPosition() override;  // 00
 
 		// override (BSExtraData)
-		virtual ExtraDataType GetType() const override;                             // 01 - { return kStartingPosition; }
-		virtual bool          IsNotEqual(const BSExtraData* a_rhs) const override;  // 02 - { return location != a_rhs->location || startPosition.pos != a_rhs->startPosition.pos || startPosition.rot != a_rhs->startPosition.rot; }
+		ExtraDataType GetType() const override;                             // 01 - { return kStartingPosition; }
+		bool          IsNotEqual(const BSExtraData* a_rhs) const override;  // 02 - { return location != a_rhs->location || startPosition.pos != a_rhs->startPosition.pos || startPosition.rot != a_rhs->startPosition.rot; }
 
 		// members
 		FILE_POS_ROT startPosition;  // 10

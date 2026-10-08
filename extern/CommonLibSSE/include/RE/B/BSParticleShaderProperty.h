@@ -15,7 +15,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_BSParticleShaderProperty;
-		inline static constexpr auto Ni_RTTI = NiRTTI_BSParticleShaderProperty;
+		inline static auto           Ni_RTTI = NiRTTI_BSParticleShaderProperty;
 
 		virtual ~BSParticleShaderProperty();  // 00
 

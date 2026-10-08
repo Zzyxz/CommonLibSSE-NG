@@ -28,11 +28,13 @@ namespace RE
 				kTFCMode,
 				kMapDebug,
 				kLockpicking,
+				// SE numbering. AE inserts Marketplace at game index 16, so kFavor is 17 there;
+				// ControlMap translates (ControlMap::ToGameContext).
 				kFavor,
 
-				kTotal = 17,
+				kTotal,
 
-				kNone = 18
+				kNone
 			};
 		};
 		using INPUT_CONTEXT_ID = INPUT_CONTEXT_IDS::INPUT_CONTEXT_ID;

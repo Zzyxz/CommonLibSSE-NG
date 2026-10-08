@@ -8,7 +8,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_NiFloatsExtraData;
-		inline static constexpr auto Ni_RTTI = NiRTTI_NiFloatsExtraData;
+		inline static auto           Ni_RTTI = NiRTTI_NiFloatsExtraData;
 		inline static constexpr auto VTABLE = VTABLE_NiFloatsExtraData;
 
 		~NiFloatsExtraData() override;  // 00

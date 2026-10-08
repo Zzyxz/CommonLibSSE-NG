@@ -8,6 +8,7 @@
 #include "RE/B/BSTSingleton.h"
 #include "RE/B/BSTimer.h"
 #include "RE/G/GPtr.h"
+#include "RE/I/IMenu.h"
 
 namespace RE
 {
@@ -62,6 +63,13 @@ namespace RE
 		struct UIMenuEntry
 		{
 		public:
+			UIMenuEntry(){};
+
+			UIMenuEntry(GPtr<IMenu> a_menu, Create_t* a_create) :
+				menu(a_menu), create(a_create) {}
+
+			~UIMenuEntry() {}
+
 			// members
 			GPtr<IMenu> menu;    // 00
 			Create_t*   create;  // 08
@@ -86,7 +94,7 @@ namespace RE
 		bool               IsSavingAllowed() const;
 		bool               IsShowingMenus() const;
 		bool               IsUsingCustomRendering() const;
-		void               Register(const std::string_view& a_menuName, Create_t* a_creator);
+		void               Register(std::string_view a_menuName, Create_t* a_creator);
 
 		template <class T>
 		void RemoveEventSink(BSTEventSink<T>* a_sink);

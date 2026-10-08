@@ -28,5 +28,4 @@ namespace RE
 		NiPointer<NiParticlesData> particleData;  // 158
 		std::uint64_t              unk160;        // 160
 	};
-	static_assert(sizeof(NiParticles) == 0x168);
 }

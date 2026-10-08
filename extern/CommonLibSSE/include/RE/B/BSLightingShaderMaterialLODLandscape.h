@@ -11,7 +11,7 @@ namespace RE
 	public:
 		inline static constexpr auto RTTI = RTTI_BSLightingShaderMaterialLODLandscape;
 		inline static constexpr auto VTABLE = VTABLE_BSLightingShaderMaterialLODLandscape;
-		inline static constexpr auto FEATURE = Feature::kLODLandNoise;
+		inline static auto           FEATURE = Feature::kLODLandNoise;
 
 		~BSLightingShaderMaterialLODLandscape() override;  // 00
 

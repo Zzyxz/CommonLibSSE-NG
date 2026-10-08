@@ -16,14 +16,32 @@ namespace RE
 	// kDisablePauseMenu if game load prevented
 	// context = kJournal
 	class JournalMenu :
-		public IMenu,                       // 00
+		public IMenu,  // 00
+#ifndef SKYRIM_CROSS_VR
 		public MenuEventHandler,            // 30
 		public BSTEventSink<BSSystemEvent>  // 40
+#else
+		public MenuEventHandler  // 30
+#endif
 	{
 	public:
 		inline static constexpr auto      RTTI = RTTI_JournalMenu;
 		inline static constexpr auto      VTABLE = VTABLE_JournalMenu;
 		constexpr static std::string_view MENU_NAME = "Journal Menu";
+
+		struct RUNTIME_DATA
+		{
+#define RUNTIME_DATA_CONTENT              \
+	Journal_QuestsTab questsTab; /* 00 */ \
+	Journal_StatsTab  statsTab;  /* 38 */ \
+	Journal_SystemTab systemTab; /* 50 */ \
+	std::uint64_t     unkD0;     /* 88 */ \
+	std::uint64_t     unkD8;     /* 90 */ \
+	std::uint64_t     unkE0;     /* 98 */
+
+			RUNTIME_DATA_CONTENT
+		};
+		static_assert(sizeof(RUNTIME_DATA) == 0xA0);
 
 		~JournalMenu() override;  // 00
 
@@ -33,20 +51,54 @@ namespace RE
 		void               AdvanceMovie(float a_interval, std::uint32_t a_currentTime) override;  // 05
 		void               PostDisplay() override;                                                // 06
 
+#ifndef SKYRIM_CROSS_VR
 		// override (MenuEventHandler)
 		bool CanProcess(InputEvent* a_event) override;              // 01
 		bool ProcessThumbstick(ThumbstickEvent* a_event) override;  // 03
 
 		// override (BSTEventSink<BSSystemEvent>)
 		BSEventNotifyControl ProcessEvent(const BSSystemEvent* a_event, BSTEventSource<BSSystemEvent>* a_eventSource) override;  // 01
+#endif
+
+		[[nodiscard]] MenuEventHandler* AsMenuEventHandler() noexcept
+		{
+			return &REL::RelocateMember<MenuEventHandler>(this, 0x30, 0x40);
+		}
+
+		[[nodiscard]] const MenuEventHandler* AsMenuEventHandler() const noexcept
+		{
+			return const_cast<JournalMenu*>(this)->AsMenuEventHandler();
+		}
+
+		[[nodiscard]] BSTEventSink<BSSystemEvent>* AsBSSystemEventSink() noexcept
+		{
+			return &REL::RelocateMember<BSTEventSink<BSSystemEvent>>(this, 0x40, 0x50);
+		}
+
+		[[nodiscard]] const BSTEventSink<BSSystemEvent>* AsBSSystemEventSink() const noexcept
+		{
+			return const_cast<JournalMenu*>(this)->AsBSSystemEventSink();
+		}
+
+		[[nodiscard]] inline RUNTIME_DATA& GetRuntimeData() noexcept
+		{
+			return REL::RelocateMember<RUNTIME_DATA>(this, 0x48, 0x58);
+		}
+
+		[[nodiscard]] inline const RUNTIME_DATA& GetRuntimeData() const noexcept
+		{
+			return REL::RelocateMember<RUNTIME_DATA>(this, 0x48, 0x58);
+		}
 
 		// members
-		Journal_QuestsTab questsTab;  // 48
-		Journal_StatsTab  statsTab;   // 80
-		Journal_SystemTab systemTab;  // 98
-		std::uint64_t     unkD0;      // D0
-		std::uint64_t     unkD8;      // D8
-		std::uint64_t     unkE0;      // E0
+#ifndef SKYRIM_CROSS_VR
+		RUNTIME_DATA_CONTENT  // 48, 58
+#endif
 	};
+#ifndef ENABLE_SKYRIM_VR
 	static_assert(sizeof(JournalMenu) == 0xE8);
+#elif !defined(ENABLE_SKYRIM_AE) && !defined(ENABLE_SKYRIM_SE)
+	static_assert(sizeof(JournalMenu) == 0xF8);
+#endif
 }
+#undef RUNTIME_DATA_CONTENT

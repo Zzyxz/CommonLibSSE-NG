@@ -10,7 +10,7 @@ namespace RE
 	public:
 		inline static constexpr auto RTTI = RTTI_BSLightingShaderMaterialHairTint;
 		inline static constexpr auto VTABLE = VTABLE_BSLightingShaderMaterialHairTint;
-		inline static constexpr auto FEATURE = Feature::kHairTint;
+		inline static auto           FEATURE = Feature::kHairTint;
 
 		~BSLightingShaderMaterialHairTint() override;  // 00
 

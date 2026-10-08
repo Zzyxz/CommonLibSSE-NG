@@ -9,7 +9,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraRadius;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kRadius;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kRadius;
 
 		~ExtraRadius() override;  // 00
 

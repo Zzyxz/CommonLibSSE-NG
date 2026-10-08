@@ -26,6 +26,13 @@ namespace RE
 		return func(this);
 	}
 
+	bool MagicItem::IsValid() const
+	{
+		using func_t = decltype(&MagicItem::IsValid);
+		REL::Relocation<func_t> func{ RELOCATION_ID(11183, 11290) };
+		return func(this);
+	}
+
 	Effect* MagicItem::GetCostliestEffectItem(MagicSystem::Delivery a_delivery, bool a_positiveArea) const
 	{
 		using func_t = decltype(&MagicItem::GetCostliestEffectItem);
@@ -71,6 +78,11 @@ namespace RE
 		using func_t = decltype(&MagicItem::HasEffect);
 		REL::Relocation<func_t> func{ RELOCATION_ID(11207, 11315) };
 		return func(this, a_archetype);
+	}
+
+	bool MagicItem::IsHostile() const
+	{
+		return hostileCount > 0;
 	}
 
 	bool MagicItem::IsPermanent() const

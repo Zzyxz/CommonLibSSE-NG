@@ -13,12 +13,12 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraFactionChanges;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kFactionChanges;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kFactionChanges;
 
-		virtual ~ExtraFactionChanges();  // 00
+		~ExtraFactionChanges() override;  // 00
 
 		// override (BSExtraData)
-		virtual ExtraDataType GetType() const override;  // 01 - { return kFactionChanges; }
+		ExtraDataType GetType() const override;  // 01 - { return kFactionChanges; }
 
 		// members
 		BSTArray<FACTION_RANK> factionChanges;      // 10

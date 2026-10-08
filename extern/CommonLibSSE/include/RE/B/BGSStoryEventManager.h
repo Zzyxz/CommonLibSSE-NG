@@ -7,7 +7,7 @@
 
 namespace RE
 {
-	class BGSRegisteredStoryEvent;
+	struct BGSRegisteredStoryEvent;
 	class BGSStoryEvent;
 
 	class BGSStoryEventManager :

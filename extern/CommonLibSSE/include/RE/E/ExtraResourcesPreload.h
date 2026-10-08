@@ -9,12 +9,12 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraResourcesPreload;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kResourcesPreload;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kResourcesPreload;
 
-		virtual ~ExtraResourcesPreload();  // 00
+		~ExtraResourcesPreload() override;  // 00
 
 		// override (BSExtraData)
-		virtual ExtraDataType GetType() const override;  // 01 - { return kResourcesPreload; }
+		ExtraDataType GetType() const override;  // 01 - { return kResourcesPreload; }
 
 		// members
 		void* unk10;  // 10

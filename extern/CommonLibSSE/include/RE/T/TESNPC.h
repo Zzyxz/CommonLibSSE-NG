@@ -12,13 +12,13 @@
 #include "RE/S/SoundLevels.h"
 #include "RE/T/TESActorBase.h"
 #include "RE/T/TESRaceForm.h"
+#include "RE/T/TintMask.h"
 
 namespace RE
 {
 	class BSFaceGenNiNode;
 	class MenuOpenCloseEvent;
 	class NiColorA;
-	class TintMask;
 
 	class CreatureSounds
 	{
@@ -253,7 +253,6 @@ namespace RE
 		[[nodiscard]] SEX            GetSex() const;
 		bool                         HasApplicableKeywordString(std::string_view a_editorID);
 		bool                         HasOverlays();
-		bool                         HasFaction(TESFaction* a_faction) const;
 		bool                         IsInFaction(TESFaction* a_faction) const;
 		bool                         RemovePerk(BGSPerk* a_perk);
 		bool                         RemovePerks(const std::vector<BGSPerk*>& a_perks);

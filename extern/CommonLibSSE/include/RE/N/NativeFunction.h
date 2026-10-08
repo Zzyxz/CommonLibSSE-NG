@@ -67,8 +67,8 @@ namespace RE
 				_stub(a_callback)
 			{
 				std::size_t i = 0;
-				((_descTable.entries[i++].second.SetType(GetRawType<Args>())), ...);
-				_retType = GetRawType<result_type>();
+				((_descTable.entries[i++].second.SetType(GetRawType<Args>{}())), ...);
+				_retType = GetRawType<result_type>{}();
 			}
 
 			~NativeFunction() override = default;  // 00

@@ -3,6 +3,7 @@
 #include "RE/B/BSInputDeviceFactory.h"
 #include "RE/B/BSPCGamepadDeviceDelegate.h"
 #include "RE/B/BSPCGamepadDeviceHandler.h"
+#include "RE/B/BSTrackedControllerDevice.h"
 #include "RE/B/BSWin32KeyboardDevice.h"
 #include "RE/B/BSWin32MouseDevice.h"
 #include "RE/B/BSWin32VirtualKeyboardDevice.h"
@@ -23,22 +24,46 @@ namespace RE
 
 	BSPCGamepadDeviceHandler* BSInputDeviceManager::GetGamepadHandler()
 	{
-		return static_cast<BSPCGamepadDeviceHandler*>(devices[stl::to_underlying(INPUT_DEVICE::kGamepad)]);
+		return static_cast<BSPCGamepadDeviceHandler*>(devices[std::to_underlying(INPUT_DEVICE::kGamepad)]);
 	}
 
 	BSWin32KeyboardDevice* BSInputDeviceManager::GetKeyboard()
 	{
-		return static_cast<BSWin32KeyboardDevice*>(devices[stl::to_underlying(INPUT_DEVICE::kKeyboard)]);
+		return static_cast<BSWin32KeyboardDevice*>(devices[std::to_underlying(INPUT_DEVICE::kKeyboard)]);
 	}
 
 	BSWin32MouseDevice* BSInputDeviceManager::GetMouse()
 	{
-		return static_cast<BSWin32MouseDevice*>(devices[stl::to_underlying(INPUT_DEVICE::kMouse)]);
+		return static_cast<BSWin32MouseDevice*>(devices[std::to_underlying(INPUT_DEVICE::kMouse)]);
+	}
+
+	BSTrackedControllerDevice* BSInputDeviceManager::GetVRControllerRight()
+	{
+#ifndef ENABLE_SKYRIM_VR
+		return nullptr;
+#else
+		if SKYRIM_REL_VR_CONSTEXPR (!REL::Module::IsVR()) {
+			return nullptr;
+		}
+		return static_cast<BSTrackedControllerDevice*>(devices[std::to_underlying(INPUT_DEVICE::kVRRight)]);
+#endif
+	}
+
+	BSTrackedControllerDevice* BSInputDeviceManager::GetVRControllerLeft()
+	{
+#ifndef ENABLE_SKYRIM_VR
+		return nullptr;
+#else
+		if SKYRIM_REL_VR_CONSTEXPR (!REL::Module::IsVR()) {
+			return nullptr;
+		}
+		return static_cast<BSTrackedControllerDevice*>(devices[std::to_underlying(INPUT_DEVICE::kVRLeft)]);
+#endif
 	}
 
 	BSWin32VirtualKeyboardDevice* BSInputDeviceManager::GetVirtualKeyboard()
 	{
-		return static_cast<BSWin32VirtualKeyboardDevice*>(devices[stl::to_underlying(INPUT_DEVICE::kVirtualKeyboard)]);
+		return static_cast<BSWin32VirtualKeyboardDevice*>(devices[std::to_underlying(INPUT_DEVICE::kVirtualKeyboard)]);
 	}
 
 	bool BSInputDeviceManager::IsGamepadConnected()
@@ -61,22 +86,22 @@ namespace RE
 
 	bool BSInputDeviceManager::GetDeviceKeyMapping(INPUT_DEVICE a_device, std::uint32_t a_key, BSFixedString& a_mapping)
 	{
-		auto device = devices[stl::to_underlying(a_device)];
+		auto device = devices[std::to_underlying(a_device)];
 		return device && device->GetKeyMapping(a_key, a_mapping);
 	}
 
 	bool BSInputDeviceManager::GetDeviceMappedKeycode(INPUT_DEVICE a_device, std::uint32_t a_key, uint32_t& a_outKeyCode)
 	{
-		auto device = devices[stl::to_underlying(a_device)];
+		auto device = devices[std::to_underlying(a_device)];
 		return device && device->GetMappedKeycode(a_key, a_outKeyCode);
 	}
 
 	void BSInputDeviceManager::ProcessGamepadEnabledChange()
 	{
-		if (valueQueued) {
+		if (GetRuntimeData().valueQueued) {
 			bool* pGamepadEnable = reinterpret_cast<bool*>(RELOCATION_ID(511901, 388465).address());
 			*pGamepadEnable = true;
-			valueQueued = false;
+			GetRuntimeData().valueQueued = false;
 		}
 	}
 

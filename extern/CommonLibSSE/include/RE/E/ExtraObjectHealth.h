@@ -9,12 +9,12 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraObjectHealth;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kObjectHealth;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kObjectHealth;
 
-		virtual ~ExtraObjectHealth();  // 00
+		~ExtraObjectHealth() override;  // 00
 
 		// override (BSExtraData)
-		virtual ExtraDataType GetType() const override;  // 01 - { return kObjectHealth; }
+		ExtraDataType GetType() const override;  // 01 - { return kObjectHealth; }
 
 		// members
 		float         health;  // 10

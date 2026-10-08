@@ -14,7 +14,7 @@ namespace RE
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraForcedTarget;
 		inline static constexpr auto VTABLE = VTABLE_ExtraForcedTarget;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kForcedTarget;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kForcedTarget;
 
 		ExtraForcedTarget();
 		explicit ExtraForcedTarget(ObjectRefHandle a_target);

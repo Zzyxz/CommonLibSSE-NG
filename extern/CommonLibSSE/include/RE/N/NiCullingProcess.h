@@ -34,7 +34,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_NiCullingProcess;
-		inline static constexpr auto Ni_RTTI = NiRTTI_NiCullingProcess;
+		inline static auto           Ni_RTTI = NiRTTI_NiCullingProcess;
 
 		// add
 		[[nodiscard]] virtual const NiRTTI*   GetRTTI() const;                      // 00

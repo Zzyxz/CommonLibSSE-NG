@@ -135,7 +135,7 @@ namespace RE
 				~EnchantMenuDisenchantCallback() override;  // 00
 
 				// override (EnchantMenuCallback)
-				virtual void Run(Message a_msg) override;  // 01
+				void Run(Message a_msg) override;  // 01
 			};
 			static_assert(sizeof(EnchantMenuDisenchantCallback) == 0x18);
 
@@ -148,7 +148,7 @@ namespace RE
 				~EnchantMenuCraftCallback() override;  // 00
 
 				// override (EnchantMenuCallback)
-				virtual void Run(Message a_msg) override;  // 01
+				void Run(Message a_msg) override;  // 01
 			};
 			static_assert(sizeof(EnchantMenuCraftCallback) == 0x18);
 
@@ -161,7 +161,7 @@ namespace RE
 				~EnchantMenuExitCallback() override;  // 00
 
 				// override (EnchantMenuCallback)
-				virtual void Run(Message a_msg) override;  // 01
+				void Run(Message a_msg) override;  // 01
 			};
 			static_assert(sizeof(EnchantMenuExitCallback) == 0x18);
 
@@ -177,11 +177,11 @@ namespace RE
 			};
 			static_assert(sizeof(Selections) == 0x30);
 
-			virtual ~EnchantConstructMenu();  // 00
+			~EnchantConstructMenu() override;  // 00
 
 			// override (CraftingSubMenu)
 			void Accept(CallbackProcessor* a_cbReg) override;          // 01
-			bool HasItemPreview() override;                            // 04 - { return currentCategory != Enchantment || craftItemPreview; }
+			[[nodiscard]] bool HasItemPreview() override;                            // 04 - { return currentCategory != Enchantment || craftItemPreview; }
 			bool ProcessUserEvent(BSFixedString* a_control) override;  // 05
 			void SetItemCardInfo(ItemCard* a_itemCard) override;       // 07
 

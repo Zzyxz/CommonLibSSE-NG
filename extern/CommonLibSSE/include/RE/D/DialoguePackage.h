@@ -16,11 +16,11 @@ namespace RE
 		~DialoguePackage() override;  // 00
 
 		// override (TESPackage)
-		void SaveGame(BGSSaveFormBuffer* a_buf) override;      // 0E
-		void LoadGame(BGSLoadFormBuffer* a_buf) override;      // 0F
-		void InitLoadGame(BGSLoadFormBuffer* a_buf) override;  // 10 - { TESForm::InitLoadGame(a_buf); }
-		void Copy(TESForm* a_srcForm) override;                // 2F - { TESForm::Copy(a_srcForm); }
-		bool IsPackageOwner(Actor* a_actor) override;          // 3F
+		void               SaveGame(BGSSaveFormBuffer* a_buf) override;      // 0E
+		void               LoadGame(BGSLoadFormBuffer* a_buf) override;      // 0F
+		void               InitLoadGame(BGSLoadFormBuffer* a_buf) override;  // 10 - { TESForm::InitLoadGame(a_buf); }
+		void               Copy(TESForm* a_srcForm) override;                // 2F - { TESForm::Copy(a_srcForm); }
+		[[nodiscard]] bool IsPackageOwner(Actor* a_actor) override;          // 3F
 
 		// members
 		std::uint32_t   unk0E0;  // 0E0

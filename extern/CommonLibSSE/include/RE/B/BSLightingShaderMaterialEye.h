@@ -13,7 +13,7 @@ namespace RE
 	public:
 		inline static constexpr auto RTTI = RTTI_BSLightingShaderMaterialEye;
 		inline static constexpr auto VTABLE = VTABLE_BSLightingShaderMaterialEye;
-		inline static constexpr auto FEATURE = Feature::kEye;
+		inline static auto           FEATURE = Feature::kEye;
 
 		~BSLightingShaderMaterialEye() override;  // 00
 

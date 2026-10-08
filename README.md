@@ -1,55 +1,88 @@
-# CommonLibSSE V2/V5 Template
+# CommonLibSSE NG Template
 
-MIT-licensed starting point for SKSE plugins that can read both the legacy Address Library V2 format and the current V5 format.
+MIT-licensed starting point for SKSE plugins. One DLL runs on Skyrim SE 1.5.97 and on AE 1.6 and 1.7.
 
-SE and AE builds select relocation IDs and Address Library formats 1, 2, or 5 from the running game version.
+The template builds against `extern/CommonLibSSE`, which is CommonLibSSE NG 3.7.0 (MIT). It adds Address Library V5 support, Skyrim 1.7 detection and a set of fixes; see [Changes to CommonLibSSE NG](#changes-to-commonlibsse-ng).
 
-## Address Library location
+## Requirements
 
-The vendored CommonLibSSE selects the normal Address Library filename from the running game version:
-
-```text
-Data\\SKSE\\Plugins\\version-<major>-<minor>-<patch>-<revision>.bin
-Data\\SKSE\\Plugins\\versionlib-<major>-<minor>-<patch>-<revision>.bin
-```
-
-Skyrim 1.5 uses `version-...bin` and format 1. Skyrim 1.6 and newer use `versionlib-...bin` and accept format 2 or 5. If the normal file is absent, the corresponding `Data\\SKSE\\Plugins\\AddressLibV2\\...` path remains available as a fallback.
-
-The V5 reader is implemented in `extern/CommonLibSSE/include/REL/AddressLibraryV5.h`.
-
-## Skyrim 1.7 support
-
-The library detects the running game version. Skyrim 1.5 selects SE relocation IDs, while Skyrim 1.6 and 1.7 select AE relocation IDs. The vendored runtime constants include `SKSE::RUNTIME_1_7_99`, which is also exposed as `SKSE::RUNTIME_LATEST` for SSE/AE builds.
-
-The starter plugin declares `UsesNoStructs()` and exports the legacy query entry point, so its AE build can also load on Skyrim 1.5.97. Plugins that access class layouts which differ between SE and AE need separate SE and AE builds.
+- Visual Studio 2022 (C++23)
+- CMake 3.21 or newer
+- [vcpkg](https://github.com/microsoft/vcpkg) with `VCPKG_ROOT` set; the dependencies are in `vcpkg.json`
 
 ## Create a plugin
 
-Configure the name and author, then build the AE variant out of tree:
+The example plugin is `src/TemplatePlugin.cpp`. It exports the SE and AE entry points, checks for the Address Library before `SKSE::Init`, and writes a log. Set the name and author, then build out of tree:
 
 ```powershell
-cmake -S . -B build-ae -DSKYRIM_VARIANT=AE -DPLUGIN_NAME=MyPlugin -DPLUGIN_AUTHOR=YourName -DCMAKE_TOOLCHAIN_FILE=C:/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake
-cmake --build build-ae --config Release
+cmake -S . -B build -DPLUGIN_NAME=MyPlugin -DPLUGIN_AUTHOR=YourName -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows-static
+cmake --build build --config Release
 ```
 
-Build the SE variant for structure-dependent plugins that support Skyrim 1.5.97:
+`SKYRIM_VARIANT` selects the runtimes:
 
-```powershell
-cmake -S . -B build-se -DSKYRIM_VARIANT=SE -DPLUGIN_NAME=MyPlugin -DPLUGIN_AUTHOR=YourName -DCMAKE_TOOLCHAIN_FILE=C:/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake
-cmake --build build-se --config Release
+| Value | Runs on |
+|---|---|
+| `UNIVERSAL` (default) | SE 1.5.97 and AE 1.6/1.7, one DLL |
+| `SE` | SE 1.5.97 only |
+| `AE` | AE 1.6/1.7 only |
+| `VR` | Skyrim VR, built against `extern/CommonLibVR` |
+
+To copy the DLL and PDB into the game after each build, add `-DCOPY_BUILD=ON -DSKYRIM_PATH="C:/path/to/Skyrim Special Edition"`.
+
+## One DLL for SE and AE
+
+Some engine classes have a different layout on SE and AE. In a universal build these classes do not expose the fields that move; use the runtime accessors instead:
+
+- `GetRuntimeData()` (or `GetActorRuntimeData()` on `Actor`), for example `cell->GetRuntimeData().worldSpace` or `RE::TES::GetSingleton()->GetRuntimeData().worldSpace`
+- `actor->AsMagicTarget()`, `actor->AsActorValueOwner()`, `actor->AsActorState()` for Actor's base classes
+- `REL::RelocateMember<T>(obj, seAndAE, vr)` or `REL::RuntimeMember<T>(obj, seOffset, aeOffset)` for fields you reverse-engineered yourself
+
+Never `static_cast` an `Actor*` to one of these bases and never hard-code a field offset in a universal build: the compiled offset is right on one runtime only.
+
+Function and global addresses use `REL::RelocationID(seID, aeID)`; a plain `REL::ID` is valid on one runtime only.
+
+## Address Library
+
+The Address Library file is chosen from the running game version:
+
+```text
+Data/SKSE/Plugins/version-<version>.bin      SE 1.5.97 (format 1)
+Data/SKSE/Plugins/versionlib-<version>.bin   AE 1.6 (format 2), 1.6.1130 and later / 1.7 (format 5)
 ```
 
-`extern/CommonLibSSE` and `extern/CommonLibVR` are MIT-licensed vendored dependencies. The starter plugin is `src/TemplatePlugin.cpp`; add source files and targets as required.
+Formats 1, 2 and 5 are read. If the normal file is missing, `Data/SKSE/Plugins/AddressLibV2/<same name>` is used instead.
 
-To build for VR instead of SSE/AE:
+## Finding hook sites without byte offsets
 
-```powershell
-cmake -S . -B build-vr -DBUILD_SKYRIMVR=ON -DPLUGIN_NAME=MyVRPlugin -DCMAKE_TOOLCHAIN_FILE=C:/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake
-cmake --build build-vr --config Release
+`REL/Callsite.h` finds a call by its owner and target function instead of a fixed offset:
+
+```cpp
+constexpr REL::RelocationID kOwner{ /* SE id */, /* AE id */ };
+constexpr REL::RelocationID kTarget{ /* SE id */, /* AE id */ };
+
+const auto site = REL::try_resolve_callsite(kOwner, REL::AUTO_CALLSITE(kTarget));
+if (site) {
+    SKSE::GetTrampoline().write_call<5>(*site.address, Hook);
+} else {
+    SKSE::log::warn("hook site not found: {}", REL::callsite_status_text(site.status));
+}
 ```
 
-To copy artifacts into a game installation during a local build:
+The owner's code range comes from the game's exception data (`.pdata`). `AUTO_CALLSITE` requires exactly one match; `AUTO_CALLSITE_FIRST`, `_LAST` and `_NTH` pick one of several. `or_offset(...)` accepts a known offset for listed game versions, also when another plugin has already hooked that call. Check every found site in a disassembler: a matching call does not prove that the arguments fit your hook.
 
-```powershell
-cmake -S . -B build-ae -DSKYRIM_VARIANT=AE -DCOPY_BUILD=ON -DSKYRIM_PATH='C:/path/to/Skyrim Special Edition'
-```
+## Changes to CommonLibSSE NG
+
+Compared with CommonLibSSE NG 3.7.0 (commit `b93280e8`):
+
+- Address Library V5 (format 5) and the `AddressLibV2` fallback folder.
+- Skyrim 1.7 is detected as AE. NG treated every version other than 1.4 and 1.6 as SE.
+- `IDDatabase::id2offset` requires an exact id match. Before, an id missing from the library silently returned the next id's address on SE and AE. `try_id2offset` returns no value instead of failing.
+- `ControlMap`, `TES`, `InterfaceStrings`, `CombatController` and `BGSSaveLoadManager` select their AE layout at runtime (`GetRuntimeData()`). NG checked a macro it never defines, so these classes always had the SE layout. `ControlMap` also maps `kFavor` to the game's index on AE.
+- Corrected Address Library ids, checked in IDA against 1.5.97 and 1.6.1170: the `BShkbAnimationGraph` variable setters, `BSShaderTextureSet::Create` on SE, `InventoryChanges::SetUniqueID`, `ObjectTypeInfo::ReleaseData` (which also takes a flag), two `MovementMessageFreezeDirection` vtables and `FxResponseArgs<12>`. Five functions got new AE ids in 1.6.1130 (`GetCachedString`, `Set_CStr`, `Console::SelectedRef`, `Script::CompileAndRun`, `InventoryChanges::RemoveAllItems`); `REL::AESplitID` picks the id for the running version.
+- Runtime constants for 1.6.1130, 1.6.1170, 1.7.99 and 1.7.104. `RUNTIME_SSE_1_6_1330` held 1.5.1330 and is deprecated.
+- Additions: `REL/Callsite.h`, `REL::RuntimeMember`, `REL::Module::RuntimeFor` and `AddressLibraryFileName`, `PluginVersionData::UsesAddressLibraryV5` and `UsesUpdatedStructs`.
+
+## License
+
+MIT, see `LICENSE` and `NOTICE.md`. Only MIT-compatible code and dependencies may be added.

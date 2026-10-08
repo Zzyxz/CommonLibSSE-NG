@@ -17,7 +17,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_BSCullingProcess;
-		inline static constexpr auto Ni_RTTI = NiRTTI_BSCullingProcess;
+		inline static auto           Ni_RTTI = NiRTTI_BSCullingProcess;
 
 		enum class BSCPCullingType
 		{

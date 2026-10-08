@@ -39,7 +39,7 @@ namespace RE
 			}
 
 			BSTSmartPointer<Array> array;
-			TypeInfo               typeInfo(GetRawType<typename U::value_type>());
+			TypeInfo               typeInfo(GetRawType<typename U::value_type>{}());
 			if (!vm->CreateArray(typeInfo, static_cast<std::uint32_t>(a_src.size()), array) || !array) {
 				assert(false);
 				return;
@@ -75,13 +75,12 @@ namespace RE
 			assert(a_src);
 
 			std::remove_const_t<T> container;
-			if (a_src->IsNoneObject()) {
+			if (a_src->IsNoneObject() || a_src->IsNoneArray()) {
 				return container;
 			}
 
 			auto array = a_src->GetArray();
 			if (!array) {
-				assert(false);
 				return container;
 			}
 

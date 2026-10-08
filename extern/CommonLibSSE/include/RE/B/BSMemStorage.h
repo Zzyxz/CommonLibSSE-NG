@@ -9,8 +9,8 @@ namespace RE
 	class BSMemStorage : public BSStorage
 	{
 	public:
-		inline static auto RTTI = RTTI_BSMemStorage;
-		inline static auto VTABLE = VTABLE_BSMemStorage;
+		inline static constexpr auto RTTI = RTTI_BSMemStorage;
+		inline static constexpr auto VTABLE = VTABLE_BSMemStorage;
 
 		~BSMemStorage() override;  // 00
 

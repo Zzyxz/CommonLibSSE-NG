@@ -29,20 +29,24 @@ namespace RE
 		};
 		static_assert(sizeof(PresenceBitfield) == 0x18);
 
-#ifndef SKYRIM_SUPPORT_AE
-		~BaseExtraList();  // 00
-#else
-		virtual ~BaseExtraList();  // 00
-#endif
+		[[nodiscard]] BSExtraData*& GetData() noexcept;
+
+		[[nodiscard]] const BSExtraData*& GetData() const noexcept;
+
+		[[nodiscard]] PresenceBitfield*& GetPresence() noexcept;
+
+		[[nodiscard]] const PresenceBitfield*& GetPresence() const noexcept;
+
+#ifndef ENABLE_SKYRIM_AE
+		~BaseExtraList();  // 00, virtual on AE 1.6.629 and later.
 
 		// members
-		BSExtraData*      data = nullptr;      // 08
-		PresenceBitfield* presence = nullptr;  // 10
+		BSExtraData*      data = nullptr;      // 00, 08
+		PresenceBitfield* presence = nullptr;  // 08, 10
+#endif
 	};
-#ifndef SKYRIM_SUPPORT_AE
+#ifndef ENABLE_SKYRIM_AE
 	static_assert(sizeof(BaseExtraList) == 0x10);
-#else
-	static_assert(sizeof(BaseExtraList) == 0x18);
 #endif
 
 	class ExtraDataList
@@ -129,6 +133,9 @@ namespace RE
 		using iterator = iterator_base<BSExtraData>;
 		using const_iterator = iterator_base<const BSExtraData>;
 
+		ExtraDataList();
+		~ExtraDataList();
+
 		TES_HEAP_REDEFINE_NEW();
 
 		iterator       begin();
@@ -181,27 +188,23 @@ namespace RE
 		TESForm*              GetOwner();
 		SOUL_LEVEL            GetSoulLevel() const;
 		ObjectRefHandle       GetTeleportLinkedDoor();
+		bool                  HasQuestObjectAlias();
 		void                  SetCount(std::uint16_t a_count);
 		void                  SetEncounterZone(BGSEncounterZone* a_zone);
 		void                  SetExtraFlags(ExtraFlags::Flag a_flags, bool a_enable);
-		void                  SetHeadingTargetRefHandle(ObjectRefHandle& a_handle);
 		void                  SetInventoryChanges(InventoryChanges* a_changes);
-		void                  SetLevCreaModifier(LEV_CREA_MODIFIER a_modifier);
-		void                  SetLinkedRef(TESObjectREFR* a_targetRef, BGSKeyword* a_keyword);
 		void                  SetOwner(TESForm* a_owner);
 
 	private:
-		BSExtraData* GetByTypeImpl(ExtraDataType a_type) const;
+		[[nodiscard]] BSExtraData* GetByTypeImpl(ExtraDataType a_type) const;
 		void         MarkType(std::uint32_t a_type, bool a_cleared);
 		void         MarkType(ExtraDataType a_type, bool a_cleared);
+		[[nodiscard]] BSReadWriteLock& GetLock() const noexcept;
 
 		// members
 		BaseExtraList           _extraData;  // 00
-		mutable BSReadWriteLock _lock;       // 18
-	};
-#ifndef SKYRIM_SUPPORT_AE
-	static_assert(sizeof(ExtraDataList) == 0x18);
-#else
-	static_assert(sizeof(ExtraDataList) == 0x20);
+#ifndef ENABLE_SKYRIM_AE
+		mutable BSReadWriteLock _lock;       // 10, 18; offset 18 only for AE versions .629 and later.
 #endif
+	};
 }

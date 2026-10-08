@@ -12,7 +12,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_NiColorInterpolator;
-		inline static constexpr auto Ni_RTTI = NiRTTI_NiColorInterpolator;
+		inline static auto           Ni_RTTI = NiRTTI_NiColorInterpolator;
 
 		~NiColorInterpolator() override;  // 00
 

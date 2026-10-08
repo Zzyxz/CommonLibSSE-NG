@@ -10,7 +10,7 @@ namespace RE
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraHealth;
 		inline static constexpr auto VTABLE = VTABLE_ExtraHealth;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kHealth;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kHealth;
 
 		ExtraHealth();
 		explicit ExtraHealth(float a_health);

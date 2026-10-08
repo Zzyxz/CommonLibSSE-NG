@@ -11,17 +11,17 @@ namespace RE
 
 	BSShaderTextureSet* BSShaderTextureSet::Create()
 	{
-#ifdef SKYRIM_SUPPORT_AE
-		using func_t = decltype(&BSShaderTextureSet::Create);
-		REL::Relocation<func_t> func{ RELOCATION_ID(100451, 107172) };
-		return func();
-#else
-		auto textureset = malloc<BSShaderTextureSet>();
-		std::memset(textureset, 0, sizeof(BSShaderTextureSet));
-		if (textureset) {
-			textureset->Ctor();
+		if SKYRIM_REL_CONSTEXPR (REL::Module::IsAE()) {
+			using func_t = decltype(&BSShaderTextureSet::Create);
+			REL::Relocation<func_t> func{ RELOCATION_ID(100451, 107172) };
+			return func();
+		} else {
+			auto textureset = malloc<BSShaderTextureSet>();
+			std::memset(reinterpret_cast<void*>(textureset), 0, sizeof(BSShaderTextureSet));
+			if (textureset) {
+				textureset->Ctor();
+			}
+			return textureset;
 		}
-		return textureset;
-#endif
 	}
 }

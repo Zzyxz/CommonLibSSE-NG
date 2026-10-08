@@ -10,7 +10,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraSound;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kSound;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kSound;
 
 		~ExtraSound() override;  // 00
 

@@ -59,8 +59,8 @@ namespace RE
 
 		static PlayerCamera* GetSingleton();
 
-		void ForceFirstPerson();
-		void ForceThirdPerson();
+		bool ForceFirstPerson();
+		bool ForceThirdPerson();
 		bool IsInBleedoutMode() const;
 		bool IsInFirstPerson() const;
 		bool IsInFreeCameraMode() const;

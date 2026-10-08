@@ -110,9 +110,9 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraMapMarker;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kMapMarker;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kMapMarker;
 
-		virtual ~ExtraMapMarker();  // 00
+		~ExtraMapMarker() override;  // 00
 
 		// override (BSExtraData)
 		ExtraDataType GetType() const override;                             // 01 - { return kMapMarker; }

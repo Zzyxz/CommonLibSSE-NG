@@ -8,7 +8,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_BSShaderTextureSet;
-		inline static constexpr auto Ni_RTTI = NiRTTI_BSShaderTextureSet;
+		inline static auto           Ni_RTTI = NiRTTI_BSShaderTextureSet;
 		inline static constexpr auto VTABLE = VTABLE_BSShaderTextureSet;
 
 		~BSShaderTextureSet() override;  // 00

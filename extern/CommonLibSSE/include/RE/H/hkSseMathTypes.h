@@ -1,5 +1,7 @@
 #pragma once
 
+#include <xmmintrin.h>
+
 namespace RE
 {
 	using hkQuadReal = __m128;

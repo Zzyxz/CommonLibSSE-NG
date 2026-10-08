@@ -6,6 +6,7 @@
 #include "RE/B/BSTArray.h"
 #include "RE/B/BSTEvent.h"
 #include "RE/B/BSTSmartPointer.h"
+#include "SKSE/Version.h"
 
 namespace RE
 {
@@ -33,18 +34,32 @@ namespace RE
 	struct BSAnimationGraphVariableCache
 	{
 	public:
+		[[nodiscard]] BSSpinLock* GetGraphLock() const noexcept {
+			if SKYRIM_REL_CONSTEXPR (REL::Module::IsAE()) {
+				if (REL::Module::get().version() >= SKSE::RUNTIME_SSE_1_6_629) {
+					return &REL::RelocateMember<BSSpinLock>(this, 0x20);
+				}
+			}
+			return nullptr;
+		}
+
+		[[nodiscard]] BSTSmartPointer<BShkbAnimationGraph>& GetAnimationGraph() noexcept {
+			return REL::RelocateMemberIfNewer<BSTSmartPointer<BShkbAnimationGraph>>(SKSE::RUNTIME_SSE_1_6_629, this, 0x20, 0x28);
+		}
+
+		[[nodiscard]] const BSTSmartPointer<BShkbAnimationGraph>& GetAnimationGraph() const noexcept {
+			return REL::RelocateMemberIfNewer<BSTSmartPointer<BShkbAnimationGraph>>(SKSE::RUNTIME_SSE_1_6_629, this, 0x20, 0x28);
+		}
+
 		// members
-		BSTArray<AnimVariableCacheInfo> variableCache;  // 00
-		mutable BSSpinLock              updateLock;     // 18
-#ifdef SKYRIM_SUPPORT_AE
-		mutable BSSpinLock graphLock;  // 20
+		BSTArray<AnimVariableCacheInfo>      variableCache;   // 00
+		mutable BSSpinLock                   updateLock;      // 18
+#if !defined(ENABLE_SKYRIM_AE)
+		BSTSmartPointer<BShkbAnimationGraph> animationGraph;  // 20, 28 - smart ptr
 #endif
-		BSTSmartPointer<BShkbAnimationGraph> animationGraph;  // 28 - smart ptr
 	};
-#ifndef SKYRIM_SUPPORT_AE
+#if !defined(ENABLE_SKYRIM_AE)
 	static_assert(sizeof(BSAnimationGraphVariableCache) == 0x28);
-#else
-	static_assert(sizeof(BSAnimationGraphVariableCache) == 0x30);
 #endif
 
 	BSSmartPointer(BSAnimationGraphManager);
@@ -78,21 +93,41 @@ namespace RE
 		// override (BSTEventSink<BSAnimationGraphEvent>)
 		BSEventNotifyControl ProcessEvent(const BSAnimationGraphEvent* a_event, BSTEventSource<BSAnimationGraphEvent>* a_eventSource) override;  // 01
 
+		struct RUNTIME_DATA
+		{
+#define RUNTIME_DATA_CONTENT                                                \
+	mutable BSSpinLock                   updateLock;           /* 98, A0 */ \
+	mutable BSSpinLock                   dependentManagerLock; /* A0 */     \
+	std::uint32_t                        activeGraph;          /* A8 */     \
+	std::uint32_t                        generateDepth;        /* A8 */
+
+			RUNTIME_DATA_CONTENT
+		};
+
+		[[nodiscard]] inline RUNTIME_DATA& GetRuntimeData() noexcept
+		{
+			return REL::RelocateMemberIfNewer<RUNTIME_DATA>(SKSE::RUNTIME_SSE_1_6_629, this, 0x98, 0xA0);
+		}
+
+		[[nodiscard]] inline const RUNTIME_DATA& GetRuntimeData() const noexcept
+		{
+			return REL::RelocateMemberIfNewer<RUNTIME_DATA>(SKSE::RUNTIME_SSE_1_6_629, this, 0x98, 0xA0);
+		}
+
 		// members
 		std::uint32_t                                       pad0C;                 // 0C
 		BSTArray<BSTSmartPointer<BSAnimationGraphChannel>>  boundChannels;         // 10
 		BSTArray<BSTSmartPointer<BSAnimationGraphChannel>>  bumpedChannels;        // 28
 		BSTSmallArray<BSTSmartPointer<BShkbAnimationGraph>> graphs;                // 40
-		BSTArray<BSAnimationGraphManagerPtr>                subManagers;           // 58
-		BSAnimationGraphVariableCache                       variableCache;         // 70
-		mutable BSSpinLock                                  updateLock;            // 98
-		mutable BSSpinLock                                  dependentManagerLock;  // A0
-		std::uint32_t                                       activeGraph;           // A8
-		std::uint32_t                                       generateDepth;         // A8
+		BSTArray<BSAnimationGraphManagerPtr> subManagers;                          // 58
+		BSAnimationGraphVariableCache        variableCache;                        // 70
+
+#ifndef ENABLE_SKYRIM_AE
+		RUNTIME_DATA_CONTENT
+#endif
 	};
-#ifndef SKYRIM_SUPPORT_AE
+#ifndef ENABLE_SKYRIM_AE
 	static_assert(sizeof(BSAnimationGraphManager) == 0xB0);
-#else
-	static_assert(sizeof(BSAnimationGraphManager) == 0xB8);
 #endif
 }
+#undef RUNTIME_DATA_CONTENT

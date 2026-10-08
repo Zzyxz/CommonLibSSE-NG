@@ -12,7 +12,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraRoom;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kRoom;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kRoom;
 
 		~ExtraRoom() override;  // 00
 

@@ -48,8 +48,8 @@ namespace RE
 		bool Load(TESFile* a_mod) override;  // 06
 		void InitItemImpl() override;        // 13
 
-		bool IsValidRace(TESRace* a_sourceRace) const;
-		void GetNodeName(char* a_dstBuff, const TESObjectREFR* a_refr, const TESObjectARMO* a_armor, float a_weightOverride);
+		[[nodiscard]] bool IsValidRace(TESRace* a_sourceRace) const;
+		void               GetNodeName(char* a_dstBuff, const TESObjectREFR* a_refr, const TESObjectARMO* a_armor, float a_weightOverride);
 
 		// members
 		OBJ_ARMA            data;                                 // 040 - DNAM

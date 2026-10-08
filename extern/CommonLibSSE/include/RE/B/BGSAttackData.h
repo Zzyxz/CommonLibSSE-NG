@@ -44,6 +44,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_BGSAttackData;
+
 		~BGSAttackData() override;  // 00
 
 		[[nodiscard]] bool IsLeftAttack() const;
@@ -51,25 +52,6 @@ namespace RE
 		// members
 		BSFixedString event;  // 10 - ATKE
 		AttackData    data;   // 18 - ATKD
-
-static BGSAttackData* Create()
-		{
-			auto attackData = malloc<BGSAttackData>();
-			std::memset(reinterpret_cast<void*>(attackData), 0, sizeof(BGSAttackData));
-			if (attackData) {
-				attackData->Ctor();
-			}
-			return attackData;
-		}
-
-		BGSAttackData* Ctor()
-		{
-			using func_t = decltype(&BGSAttackData::Ctor);
-			REL::Relocation<func_t> func{ RELOCATION_ID(26718, 27397) };
-			BGSAttackData*          attackData = func(this);
-			return attackData;
-		}
-
 	};
 	static_assert(sizeof(BGSAttackData) == 0x50);
 }

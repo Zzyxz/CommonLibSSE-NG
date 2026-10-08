@@ -12,7 +12,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraRaceData;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kRaceData;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kRaceData;
 
 		~ExtraRaceData() override;  // 00
 

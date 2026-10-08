@@ -9,7 +9,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraLeveledItem;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kLeveledItem;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kLeveledItem;
 
 		~ExtraLeveledItem() override;  // 00
 

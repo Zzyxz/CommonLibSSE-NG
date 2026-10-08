@@ -9,7 +9,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraHealthPerc;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kHealthPerc;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kHealthPerc;
 
 		~ExtraHealthPerc() override;  // 00
 

@@ -12,7 +12,7 @@ namespace RE
 		inline static constexpr auto RTTI = RTTI_HorseCameraState;
 		inline static constexpr auto VTABLE = VTABLE_HorseCameraState;
 
-		virtual ~HorseCameraState();  // 00
+		~HorseCameraState() override;  // 00
 
 		// override (ThirdPersonState)
 		void Begin() override;                                     // 01

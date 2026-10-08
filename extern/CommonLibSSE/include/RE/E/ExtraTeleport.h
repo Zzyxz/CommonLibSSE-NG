@@ -22,7 +22,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraTeleport;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kTeleport;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kTeleport;
 
 		~ExtraTeleport() override;  // 00
 

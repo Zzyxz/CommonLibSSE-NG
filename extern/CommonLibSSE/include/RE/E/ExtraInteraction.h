@@ -12,7 +12,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraInteraction;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kInteraction;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kInteraction;
 
 		~ExtraInteraction() override;  // 00
 

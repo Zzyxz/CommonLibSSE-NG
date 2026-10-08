@@ -1,4 +1,7 @@
 #include "RE/I/InventoryChanges.h"
+#include "RE/A/Actor.h"
+#include "RE/F/FormTraits.h"
+#include "RE/T/TESObjectREFR.h"
 
 namespace RE
 {
@@ -27,11 +30,41 @@ namespace RE
 		changed = true;
 	}
 
+	void InventoryChanges::GenerateLeveledListChanges()
+	{
+		using func_t = decltype(&InventoryChanges::GenerateLeveledListChanges);
+		REL::Relocation<func_t> func{ RELOCATION_ID(15829, 16068) };
+		return func(this);
+	}
+
+	std::int16_t InventoryChanges::GetItemCount(RE::TESBoundObject* a_obj)
+	{
+		using func_t = decltype(&InventoryChanges::GetItemCount);
+		REL::Relocation<func_t> func{ RELOCATION_ID(15868, 16047) };
+		return func(this, a_obj);
+	}
+
 	TESObjectARMO* InventoryChanges::GetArmorInSlot(std::int32_t a_slot)
 	{
-		using func_t = decltype(&InventoryChanges::GetArmorInSlot);
-		REL::Relocation<func_t> func{ RELOCATION_ID(15873, 16113) };
-		return func(this, a_slot);
+		if SKYRIM_REL_VR_CONSTEXPR (REL::Module::IsVR()) {
+			auto actor = this->owner ? this->owner->As<RE::Actor>() : nullptr;
+			if (!actor) {
+				return nullptr;
+			}
+            auto bipedSlot = (a_slot - 30) >= 0 ? 1 << (a_slot - 30) : 0;
+            return actor->GetWornArmor(static_cast<BGSBipedObjectForm::BipedObjectSlot>(bipedSlot));
+		} else {
+			using func_t = decltype(&InventoryChanges::GetArmorInSlot);
+			REL::Relocation<func_t> func{ RELOCATION_ID(15873, 16113) };
+			return func(this, a_slot);
+		}
+	}
+
+	float InventoryChanges::GetInventoryWeight()
+	{
+		using func_t = decltype(&InventoryChanges::GetInventoryWeight);
+		REL::Relocation<func_t> func{ RELOCATION_ID(15883, 16123) };
+		return func(this);
 	}
 
 	std::uint16_t InventoryChanges::GetNextUniqueID()
@@ -58,7 +91,7 @@ namespace RE
 	void InventoryChanges::RemoveAllItems(TESObjectREFR* a_ref, TESObjectREFR* a_moveToRef, bool a_arg4, bool a_keepOwnership, bool a_arg6)
 	{
 		using func_t = decltype(&InventoryChanges::RemoveAllItems);
-		REL::Relocation<func_t> func{ RELOCATION_ID(15878, 441567) };
+		REL::Relocation<func_t> func{ REL::ID(REL::AESplitID{ 15878, 16118, 441567, REL::Version{ 1, 6, 1130, 0 } }) };
 		return func(this, a_ref, a_moveToRef, a_arg4, a_keepOwnership, a_arg6);
 	}
 

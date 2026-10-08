@@ -8,7 +8,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_BSMultiBoundShape;
-		inline static constexpr auto Ni_RTTI = NiRTTI_BSMultiBoundShape;
+		inline static auto           Ni_RTTI = NiRTTI_BSMultiBoundShape;
 
 		~BSMultiBoundShape() override;  // 00
 

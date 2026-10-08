@@ -17,13 +17,13 @@ namespace RE
 		inline static constexpr auto RTTI = RTTI_PlayerCameraTransitionState;
 		inline static constexpr auto VTABLE = VTABLE_PlayerCameraTransitionState;
 
-		virtual ~PlayerCameraTransitionState();  // 00
+		~PlayerCameraTransitionState() override;  // 00
 
 		// override (TESCameraState)
-		virtual void Begin() override;                                               // 01
-		virtual void Update(BSTSmartPointer<TESCameraState>& a_nextState) override;  // 03
-		virtual void GetRotation(NiQuaternion& a_rotation) override;                 // 04
-		virtual void GetTranslation(NiPoint3& a_translation) override;               // 05
+		void Begin() override;                                               // 01
+		void Update(BSTSmartPointer<TESCameraState>& a_nextState) override;  // 03
+		void GetRotation(NiQuaternion& a_rotation) override;                 // 04
+		void GetTranslation(NiPoint3& a_translation) override;               // 05
 
 		// members
 		std::uint64_t   unk20;           // 20

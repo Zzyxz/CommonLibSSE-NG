@@ -290,11 +290,11 @@ namespace RE
 		[[nodiscard]] const char* GetObjectTypeName() const override;           // 39 - { return g_packageTypeStrings[packData.packType]; }
 
 		// add
-		virtual bool IsActorAtLocation(Actor* a_actor, bool a_arg2, float a_arg3, bool a_arg4);                      // 3B
-		virtual bool IsActorAtSecondLocation(Actor* a_arg1, Actor* a_arg2, bool a_arg3, float a_arg4, bool a_arg5);  // 3C
-		virtual bool IsActorAtRefTarget(Actor* a_actor, std::int32_t a_arg2);                                        // 3D
-		virtual bool IsTargetAtLocation(Actor* a_actor, std::int32_t a_arg2);                                        // 3E
-		virtual bool IsPackageOwner(Actor* a_actor);                                                                 // 3F - { return true; }
+		[[nodiscard]] virtual bool IsActorAtLocation(Actor* a_actor, bool a_arg2, float a_arg3, bool a_arg4);                      // 3B
+		[[nodiscard]] virtual bool IsActorAtSecondLocation(Actor* a_arg1, Actor* a_arg2, bool a_arg3, float a_arg4, bool a_arg5);  // 3C
+		[[nodiscard]] virtual bool IsActorAtRefTarget(Actor* a_actor, std::int32_t a_arg2);                                        // 3D
+		[[nodiscard]] virtual bool IsTargetAtLocation(Actor* a_actor, std::int32_t a_arg2);                                        // 3E
+		[[nodiscard]] virtual bool IsPackageOwner(Actor* a_actor);                                                                 // 3F - { return true; }
 
 		// members
 		PACKAGE_DATA                                            packData;        // 20 - PKDT

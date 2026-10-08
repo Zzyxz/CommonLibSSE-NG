@@ -10,7 +10,7 @@ namespace RE
 		virtual ~TESChildCell();  // 00
 
 		// add
-		virtual TESObjectCELL* GetSaveParentCell() = 0;  // 01
+		[[nodiscard]] virtual TESObjectCELL* GetSaveParentCell() = 0;  // 01
 	};
 	static_assert(sizeof(TESChildCell) == 0x8);
 }

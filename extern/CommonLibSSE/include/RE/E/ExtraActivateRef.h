@@ -12,7 +12,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraActivateRef;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kActivateRef;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kActivateRef;
 
 		~ExtraActivateRef() override;  // 00
 

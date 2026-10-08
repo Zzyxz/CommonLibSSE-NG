@@ -22,15 +22,35 @@ namespace RE
 		bool          RegisterStreamables(NiStream& a_stream) override;   // 1A
 		void          SaveBinary(NiStream& a_stream) override;            // 1B
 		bool          IsEqual(NiObject* a_object) override;               // 1C
-		void          UpdateWorldData(NiUpdateData* a_data) override;     // 30
+#ifndef SKYRIM_CROSS_VR
+		void UpdateWorldData(NiUpdateData* a_data) override;              // 30
+#endif
 
 		// add
 		virtual bool ParseNameForValue();  // 35
 
+		struct VALUE_NODE_RUNTIME_DATA
+		{
+#define RUNTIME_DATA_CONTENT                                      \
+	std::uint8_t                      flags;            /* 128 */ \
+	std::uint32_t                     value;            /* 12C */ \
+	NiPointer<BSMasterParticleSystem> associatedObject; /* 130 */
+		};
+
+		[[nodiscard]] inline VALUE_NODE_RUNTIME_DATA& GetValueNodeRuntimeData() noexcept
+		{
+			return REL::RelocateMember<VALUE_NODE_RUNTIME_DATA>(this, 0x128, 0x150);
+		}
+
+		[[nodiscard]] inline const VALUE_NODE_RUNTIME_DATA& GetValueNodeRuntimeData() const noexcept
+		{
+			return REL::RelocateMember<VALUE_NODE_RUNTIME_DATA>(this, 0x128, 0x150);
+		}
+
 		// members
-		std::uint8_t                      flags;             // 128
-		std::uint32_t                     value;             // 12C
-		NiPointer<BSMasterParticleSystem> associatedObject;  // 130
+#ifndef SKYRIM_CROSS_VR
+		RUNTIME_DATA_CONTENT  // 128, 150
+#endif
 	};
-	static_assert(sizeof(BSValueNode) == 0x138);
 }
+#undef RUNTIME_DATA_CONTENT

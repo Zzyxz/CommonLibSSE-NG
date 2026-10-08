@@ -29,12 +29,12 @@ namespace RE
 		enum class State
 		{
 			kNone = 0,
-			kUnk01,  // Start?
-			kUnk02,  // StartCharge?
-			kReady,
-			kUnk04,  // PreStart?
-			kCharging,
-			kCasting,
+			kUnk01,     // Start?
+			kUnk02,     // Charging: set right before StartChargeImpl (non-virtual MagicCaster::StartCharge, base RequestCastImpl); UpdateImpl counts castingTimer down only in this state, then kReady (verified SE 1.5.97 / AE 1.6.1170)
+			kReady,     // Charged, waiting for release (verified SE 1.5.97 / AE 1.6.1170)
+			kUnk04,     // PreStart?
+			kCharging,  // NOT the charge phase (that is kUnk02); meaning unverified
+			kCasting,   // Concentration casting: UpdateImpl counts castingTimer up and fires every target update interval (verified SE 1.5.97 / AE 1.6.1170)
 			kUnk07,  // Unknown
 			kUnk08,  // Interrupt
 			kUnk09,  // Interrupt/Deselect
@@ -52,7 +52,7 @@ namespace RE
 		virtual void                       FinishCastImpl();                                                                                                                                                                                // 07 - { return; }
 		virtual void                       InterruptCastImpl(bool a_depleteEnergy);                                                                                                                                                         // 08 - { return; }
 		virtual void                       SpellCast(bool a_doCast, std::uint32_t a_arg2, MagicItem* a_spell);                                                                                                                              // 09 - { return; }
-		virtual bool                       CheckCast(MagicItem* a_spell, bool a_dualCast, float* a_alchStrength, MagicSystem::CannotCastReason* a_reason, bool a_useBaseValueForCost);                                                      // 0A
+		virtual bool                       CheckCast(MagicItem* a_spell, bool a_dualCast, float* a_effectStrength, MagicSystem::CannotCastReason* a_reason, bool a_useBaseValueForCost);                                                    // 0A
 		virtual TESObjectREFR*             GetCasterStatsObject() const;                                                                                                                                                                    // 0B - { return 0; }
 		virtual Actor*                     GetCasterAsActor() const;                                                                                                                                                                        // 0C - { return 0; }
 		virtual TESObjectREFR*             GetCasterObjectReference(Actor** a_outCaster) const;                                                                                                                                             // 0D
@@ -78,6 +78,7 @@ namespace RE
 		float        GetCurrentSpellCost();
 		void         InterruptCast(bool a_refund);
 		void         PlayReleaseSound(MagicItem* a_item);
+		void         SetCurrentSpell(MagicItem* a_item);
 		bool         TestProjectilePlacement(const Effect& a_effect, const bhkPickData& a_pickData);
 		void         UpdateImpl(float a_delta);
 

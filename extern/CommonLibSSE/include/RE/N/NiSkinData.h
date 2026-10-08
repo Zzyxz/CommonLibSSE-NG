@@ -13,7 +13,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_NiSkinData;
-		inline static constexpr auto Ni_RTTI = NiRTTI_NiSkinData;
+		inline static auto           Ni_RTTI = NiRTTI_NiSkinData;
 
 		class BoneVertData
 		{

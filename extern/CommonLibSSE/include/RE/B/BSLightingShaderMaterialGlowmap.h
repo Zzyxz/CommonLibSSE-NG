@@ -12,7 +12,7 @@ namespace RE
 	public:
 		inline static constexpr auto RTTI = RTTI_BSLightingShaderMaterialGlowmap;
 		inline static constexpr auto VTABLE = VTABLE_BSLightingShaderMaterialGlowmap;
-		inline static constexpr auto FEATURE = Feature::kGlowMap;
+		inline static auto           FEATURE = Feature::kGlowMap;
 
 		~BSLightingShaderMaterialGlowmap() override;  // 00
 

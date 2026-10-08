@@ -35,7 +35,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_BSFurnitureMarkerNode;
-		inline static constexpr auto NiRTTI = NiRTTI_BSFurnitureMarkerNode;
+		inline static auto           NiRTTI = NiRTTI_BSFurnitureMarkerNode;
 
 		BSTArray<BSFurnitureMarker> markers;  // 18
 	};

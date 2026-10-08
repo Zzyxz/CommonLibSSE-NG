@@ -133,7 +133,7 @@ namespace RE
 		const char* GetObjectTypeName() const override;  // 39
 
 		// override (BGSKeywordForm)
-		bool HasKeyword(const BGSKeyword* a_keyword) const override;  // 04
+		[[nodiscard]] bool HasKeyword(const BGSKeyword* a_keyword) const override;  // 04
 
 		[[nodiscard]] constexpr Archetype    GetArchetype() const noexcept { return data.archetype; }
 		[[nodiscard]] constexpr ActorValue   GetMagickSkill() const noexcept { return data.associatedSkill; }

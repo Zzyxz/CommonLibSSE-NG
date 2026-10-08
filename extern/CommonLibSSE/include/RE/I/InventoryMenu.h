@@ -21,6 +21,27 @@ namespace RE
 		inline static constexpr auto      RTTI = RTTI_InventoryMenu;
 		constexpr static std::string_view MENU_NAME = "InventoryMenu";
 
+		struct RUNTIME_DATA
+		{
+#define RUNTIME_DATA_CONTENT                                                       \
+	GFxValue        root;            /* 00 - kDisplayObject - "_level0.Menu_mc" */ \
+	ItemList*       itemList;        /* 18 */                                      \
+	ItemCard*       itemCard;        /* 20 */                                      \
+	BottomBar*      bottomBar;       /* 28 */                                      \
+	BSTArray<void*> unk60;           /* 30 */                                      \
+	std::uint8_t    unk78;           /* 48 */                                      \
+	std::uint8_t    pad79;           /* 49 */                                      \
+	std::uint16_t   pad7A;           /* 4A */                                      \
+	std::uint32_t   unk7C;           /* 4C */                                      \
+	bool            pcControlsReady; /* 50 */                                      \
+	std::uint8_t    unk81;           /* 51 */                                      \
+	std::uint16_t   pad82;           /* 52 */                                      \
+	std::uint32_t   pad84;           /* 54 */
+
+			RUNTIME_DATA_CONTENT
+		};
+		static_assert(sizeof(RUNTIME_DATA) == 0x58);
+
 		~InventoryMenu() override;  // 00
 
 		// override (IMenu)
@@ -28,20 +49,25 @@ namespace RE
 		UI_MESSAGE_RESULTS ProcessMessage(UIMessage& a_message) override;    // 04
 		void               PostDisplay() override;                           // 06
 
+		[[nodiscard]] inline RUNTIME_DATA& GetRuntimeData() noexcept
+		{
+			return REL::RelocateMember<RUNTIME_DATA>(this, 0x30, 0x40);
+		}
+
+		[[nodiscard]] inline const RUNTIME_DATA& GetRuntimeData() const noexcept
+		{
+			return REL::RelocateMember<RUNTIME_DATA>(this, 0x30, 0x40);
+		}
+
 		// members
-		GFxValue        root;             // 30 - kDisplayObject - "_level0.Menu_mc"
-		ItemList*       itemList;         // 48
-		ItemCard*       itemCard;         // 50
-		BottomBar*      bottomBar;        // 58
-		BSTArray<void*> unk60;            // 60
-		std::uint8_t    unk78;            // 78
-		std::uint8_t    pad79;            // 79
-		std::uint16_t   pad7A;            // 7A
-		std::uint32_t   unk7C;            // 7C
-		bool            pcControlsReady;  // 80
-		std::uint8_t    unk81;            // 81
-		std::uint16_t   pad82;            // 82
-		std::uint32_t   pad84;            // 84
+#ifndef SKYRIM_CROSS_VR
+		RUNTIME_DATA_CONTENT  // 30, 40
+#endif
 	};
+#ifndef ENABLE_SKYRIM_VR
 	static_assert(sizeof(InventoryMenu) == 0x88);
+#elif !defined(ENABLE_SKYRIM_AE) && !defined(ENABLE_SKYRIM_SE)
+	static_assert(sizeof(InventoryMenu) == 0x98);
+#endif
 }
+#undef RUNTIME_DATA_CONTENT

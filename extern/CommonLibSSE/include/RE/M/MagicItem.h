@@ -82,7 +82,7 @@ namespace RE
 		[[nodiscard]] virtual MagicSystem::CastingType GetCastingType() const = 0;                                   // 55
 		virtual void                                   SetDelivery(MagicSystem::Delivery a_delivery);                // 56 - { return; }
 		[[nodiscard]] virtual MagicSystem::Delivery    GetDelivery() const = 0;                                      // 57
-		virtual bool                                   IsValidDelivery(MagicSystem::Delivery a_delivery);            // 58 - { return true; }
+		[[nodiscard]] virtual bool                     IsValidDelivery(MagicSystem::Delivery a_delivery);            // 58 - { return true; }
 		[[nodiscard]] virtual float                    GetFixedCastDuration() const;                                 // 59 - { return 0.0; }
 		[[nodiscard]] virtual float                    GetRange() const;                                             // 5A - { return 0.0; }
 		[[nodiscard]] virtual bool                     IgnoresResistance() const;                                    // 5B - { return false; }
@@ -98,12 +98,12 @@ namespace RE
 		[[nodiscard]] virtual std::uint32_t            GetMaxEffectCount() const;                                    // 65 - { return 0; }
 		[[nodiscard]] virtual ActorValue               GetAssociatedSkill() const;                                   // 66 - { return ActorValue::kNone; }
 		[[nodiscard]] virtual bool                     IsTwoHanded() const;                                          // 67 - { return false; }
-		virtual std::uint32_t                          GetChunkID() = 0;                                             // 68
+		[[nodiscard]] virtual std::uint32_t            GetChunkID() = 0;                                             // 68
 		virtual void                                   CopyMagicItemData(MagicItem* a_src) = 0;                      // 69
 		virtual void                                   LoadMagicItemChunk(TESFile* a_mod, std::uint32_t a_chunkID);  // 6A - { return; }
 		virtual void                                   LoadChunkDataPostProcess(TESFile* a_mod);                     // 6B - { return; }
 		[[nodiscard]] virtual const Data*              GetData1() const = 0;                                         // 6C
-		virtual Data*                                  GetData2() = 0;                                               // 6D
+		[[nodiscard]] virtual Data*                    GetData2() = 0;                                               // 6D
 		[[nodiscard]] virtual std::uint32_t            GetDataSize() const = 0;                                      // 6E
 		virtual void                                   InitFromChunk(TESFile* a_mod) = 0;                            // 6F
 		virtual void                                   InitChunk() = 0;                                              // 70
@@ -115,9 +115,11 @@ namespace RE
 		[[nodiscard]] Effect*                GetCostliestEffectItem(MagicSystem::Delivery a_delivery = MagicSystem::Delivery::kTotal, bool a_positiveArea = false) const;
 		[[nodiscard]] Data*                  GetData();
 		[[nodiscard]] const Data*            GetData() const;
+		[[nodiscard]] bool                   IsValid() const;
 		[[nodiscard]] std::int32_t           GetLargestArea() const;
 		[[nodiscard]] std::uint32_t          GetLongestDuration() const;
 		[[nodiscard]] bool                   HasEffect(EffectArchetype a_archetype);
+		[[nodiscard]] bool                   IsHostile() const;
 		[[nodiscard]] bool                   IsPermanent() const;
 		void                                 Traverse(MagicItemTraversalFunctor& a_visitor) const;
 

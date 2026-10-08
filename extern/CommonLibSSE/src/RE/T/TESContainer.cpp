@@ -2,8 +2,6 @@
 
 #include "RE/F/FormTypes.h"
 #include "RE/T/TESForm.h"
-#include "RE/T/TESBoundObject.h"
-#include "RE/B/BGSKeywordForm.h"
 
 namespace RE
 {
@@ -30,15 +28,16 @@ namespace RE
 
 	void TESContainer::CopyObjectList(const std::vector<ContainerObject*>& a_copiedData)
 	{
-		//const auto oldData = containerObjects;
-		
+		const auto oldData = containerObjects;
+
 		const auto newSize = a_copiedData.size();
 		const auto newData = calloc<ContainerObject*>(newSize);
 		std::ranges::copy(a_copiedData, newData);
+
 		numContainerObjects = static_cast<std::uint32_t>(newSize);
 		containerObjects = newData;
 
-		//free(oldData);
+		free(oldData);
 	}
 
 	bool TESContainer::AddObjectToContainer(TESBoundObject* a_object, std::int32_t a_count, TESForm* a_owner)
@@ -46,7 +45,6 @@ namespace RE
 		bool added = false;
 		for (std::uint32_t i = 0; i < numContainerObjects; ++i) {
 			if (const auto entry = containerObjects[i]; entry && entry->obj == a_object) {
-				
 				entry->count += a_count;
 				added = true;
 				break;
@@ -129,57 +127,4 @@ namespace RE
 		}
 		return false;
 	}
-
-	bool TESContainer::RemoveAllObjectFromContainer()
-	{
-			std::vector<ContainerObject*> copiedData{ containerObjects, containerObjects + numContainerObjects };
-			copiedData.clear();
-			CopyObjectList(copiedData);
-			return true;
-	}
-
-	std::int32_t TESContainer::RemoveObjectInstancesFromContainer(TESBoundObject* a_object)
-	{
-			// Copy the container data
-			std::vector<ContainerObject*> copiedData{ containerObjects, containerObjects + numContainerObjects };
-
-			// Use std::remove_if to remove all instances of a_object
-			copiedData.erase(std::remove_if(copiedData.begin(), copiedData.end(),
-								 [a_object](ContainerObject* obj) { return obj->obj == a_object; }),
-				copiedData.end());
-
-			// Copy the modified container back to the original
-			CopyObjectList(copiedData);
-
-			// Indicate whether any elements were removed
-			return (copiedData.size() < numContainerObjects);
-	}
-
-
-	bool TESContainer::RemoveObjectFromContainerByKeyword(BGSKeyword* a_keyword)
-	{
-			// Copy the container data
-			std::vector<ContainerObject*> copiedData{ containerObjects, containerObjects + numContainerObjects };
-
-			// Use std::remove_if to remove all instances of a_object
-			copiedData.erase(std::remove_if(copiedData.begin(), copiedData.end(),
-								 [a_keyword](ContainerObject* obj) {
-									 if (obj->obj && obj->obj->As<BGSKeywordForm>()) {
-										 return obj->obj->As<BGSKeywordForm>()->HasKeyword(a_keyword);
-									 }
-									 return false;
-								 }),
-				copiedData.end());
-
-			// Copy the modified container back to the original
-			CopyObjectList(copiedData);
-
-			// Indicate whether any elements were removed
-
-	
-			return (copiedData.size() < numContainerObjects);
-	
-	}
-
-
 }

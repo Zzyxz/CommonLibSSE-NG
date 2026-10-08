@@ -10,7 +10,7 @@ namespace RE
 	public:
 		inline static constexpr auto RTTI = RTTI_BSLightingShaderMaterialSnow;
 		inline static constexpr auto VTABLE = VTABLE_BSLightingShaderMaterialSnow;
-		inline static constexpr auto FEATURE = Feature::kMultiIndexTriShapeSnow;
+		inline static auto           FEATURE = Feature::kMultiIndexTriShapeSnow;
 
 		~BSLightingShaderMaterialSnow() override;  // 00
 

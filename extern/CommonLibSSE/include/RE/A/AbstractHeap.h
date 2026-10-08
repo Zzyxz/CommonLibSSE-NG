@@ -13,17 +13,17 @@ namespace RE
 	public:
 		inline static constexpr auto RTTI = RTTI_AbstractHeap;
 
-		virtual ~AbstractHeap();  // 00
+		~AbstractHeap() override;  // 00
 
 		// override (IMemoryHeap)
-		virtual void          GetMemoryStats(MemoryStats* a_stats) override;                                 // 02
-		virtual void*         AllocateAlignImpl(std::size_t a_size, std::uint32_t a_alignment) override;     // 04
-		virtual void*         TryAllocateImpl(std::size_t a_size, std::uint32_t a_alignment) override;       // 06
-		virtual const char*   GetName() const override;                                                      // 07 - { return name; }
-		virtual bool          PointerInHeap(const void* a_pointer) const override;                           // 0A
-		virtual void          GetHeapStats(HeapStats* a_stats, bool a_fullBlockInfo) override;               // 0C
-		virtual bool          ShouldTrySmallBlockPools(std::size_t a_size, MEM_CONTEXT a_context) override;  // 0D - { return true; }
-		virtual std::uint32_t GetPageSize() const override;                                                  // 0E - { return pageSize; }
+		void          GetMemoryStats(MemoryStats* a_stats) override;                                 // 02
+		void*         AllocateAlignImpl(std::size_t a_size, std::uint32_t a_alignment) override;     // 04
+		void*         TryAllocateImpl(std::size_t a_size, std::uint32_t a_alignment) override;       // 06
+		const char*   GetName() const override;                                                      // 07 - { return name; }
+		bool          PointerInHeap(const void* a_pointer) const override;                           // 0A
+		void          GetHeapStats(HeapStats* a_stats, bool a_fullBlockInfo) override;               // 0C
+		bool          ShouldTrySmallBlockPools(std::size_t a_size, MEM_CONTEXT a_context) override;  // 0D - { return true; }
+		std::uint32_t GetPageSize() const override;                                                  // 0E - { return pageSize; }
 
 		// add
 		virtual void*       DoHeapAllocation(std::size_t a_size, std::size_t a_initialSize) = 0;                       // 0F

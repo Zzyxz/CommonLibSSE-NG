@@ -22,6 +22,7 @@
 #include <format>
 #include <fstream>
 #include <functional>
+#include <intrin.h>
 #include <iomanip>
 #include <ios>
 #include <istream>
@@ -58,16 +59,11 @@ static_assert(
 	"wrap std::time_t instead");
 
 #pragma warning(push)
-#include <binary_io/file_stream.hpp>
-#include <boost/stl_interfaces/iterator_interface.hpp>
-#include <fmt/format.h>
 #include <spdlog/spdlog.h>
 #pragma warning(pop)
 
-#include "SKSE/Impl/DInputAPI.h"
-#include "SKSE/Impl/ScePadAPI.h"
-#include "SKSE/Impl/WinAPI.h"
-#include "SKSE/Impl/XInputAPI.h"
+#include "REX/W32/KERNEL32.h"
+#include "REX/W32/USER32.h"
 
 namespace SKSE
 {
@@ -129,6 +125,12 @@ namespace SKSE
 					return c[a_pos];
 				}
 
+				[[nodiscard]] consteval char_type value_at(size_type a_pos) const noexcept
+				{
+					assert(a_pos < N);
+					return c[a_pos];
+				}
+
 				[[nodiscard]] consteval const_reference back() const noexcept { return (*this)[size() - 1]; }
 				[[nodiscard]] consteval const_pointer   data() const noexcept { return c; }
 				[[nodiscard]] consteval bool            empty() const noexcept { return this->size() == 0; }
@@ -149,9 +151,9 @@ namespace SKSE
 			string(const CharT (&)[N]) -> string<CharT, N - 1>;
 		}
 
-		template <class EF>                                    //
-		requires(std::invocable<std::remove_reference_t<EF>>)  //
-			class scope_exit
+		template <class EF>                                        //
+			requires(std::invocable<std::remove_reference_t<EF>>)  //
+		class scope_exit
 		{
 		public:
 			// 1)
@@ -238,7 +240,8 @@ namespace SKSE
 
 			template <class... Args>
 			constexpr enumeration(Args... a_values) noexcept  //
-				requires(std::same_as<Args, enum_type>&&...) :
+				requires(std::same_as<Args, enum_type> && ...)
+			:
 				_impl((static_cast<underlying_type>(a_values) | ...))
 			{}
 
@@ -267,7 +270,7 @@ namespace SKSE
 
 			template <class... Args>
 			constexpr enumeration& set(Args... a_args) noexcept  //
-				requires(std::same_as<Args, enum_type>&&...)
+				requires(std::same_as<Args, enum_type> && ...)
 			{
 				_impl |= (static_cast<underlying_type>(a_args) | ...);
 				return *this;
@@ -275,7 +278,7 @@ namespace SKSE
 
 			template <class... Args>
 			constexpr enumeration& reset(Args... a_args) noexcept  //
-				requires(std::same_as<Args, enum_type>&&...)
+				requires(std::same_as<Args, enum_type> && ...)
 			{
 				_impl &= ~(static_cast<underlying_type>(a_args) | ...);
 				return *this;
@@ -283,26 +286,26 @@ namespace SKSE
 
 			template <class... Args>
 			[[nodiscard]] constexpr bool any(Args... a_args) const noexcept  //
-				requires(std::same_as<Args, enum_type>&&...)
+				requires(std::same_as<Args, enum_type> && ...)
 			{
 				return (_impl & (static_cast<underlying_type>(a_args) | ...)) != static_cast<underlying_type>(0);
 			}
 
 			template <class... Args>
 			[[nodiscard]] constexpr bool all(Args... a_args) const noexcept  //
-				requires(std::same_as<Args, enum_type>&&...)
+				requires(std::same_as<Args, enum_type> && ...)
 			{
 				return (_impl & (static_cast<underlying_type>(a_args) | ...)) == (static_cast<underlying_type>(a_args) | ...);
 			}
 
 			template <class... Args>
 			[[nodiscard]] constexpr bool none(Args... a_args) const noexcept  //
-				requires(std::same_as<Args, enum_type>&&...)
+				requires(std::same_as<Args, enum_type> && ...)
 			{
 				return (_impl & (static_cast<underlying_type>(a_args) | ...)) == static_cast<underlying_type>(0);
 			}
 
-		private :
+		private:
 			underlying_type _impl{ 0 };
 		};
 
@@ -330,14 +333,14 @@ namespace SKSE
 #define SKSE_MAKE_ARITHMETIC_OP(a_op)                                                        \
 	template <class E, class U>                                                              \
 	[[nodiscard]] constexpr auto operator a_op(enumeration<E, U> a_enum, U a_shift) noexcept \
-		->enumeration<E, U>                                                                  \
+		-> enumeration<E, U>                                                                 \
 	{                                                                                        \
 		return static_cast<E>(static_cast<U>(a_enum.get()) a_op a_shift);                    \
 	}                                                                                        \
                                                                                              \
 	template <class E, class U>                                                              \
 	constexpr auto operator a_op##=(enumeration<E, U>& a_enum, U a_shift) noexcept           \
-		->enumeration<E, U>&                                                                 \
+		-> enumeration<E, U>&                                                                \
 	{                                                                                        \
 		return a_enum = a_enum a_op a_shift;                                                 \
 	}
@@ -345,42 +348,42 @@ namespace SKSE
 #define SKSE_MAKE_ENUMERATION_OP(a_op)                                                                      \
 	template <class E, class U1, class U2>                                                                  \
 	[[nodiscard]] constexpr auto operator a_op(enumeration<E, U1> a_lhs, enumeration<E, U2> a_rhs) noexcept \
-		->enumeration<E, std::common_type_t<U1, U2>>                                                        \
+		-> enumeration<E, std::common_type_t<U1, U2>>                                                       \
 	{                                                                                                       \
 		return static_cast<E>(static_cast<U1>(a_lhs.get()) a_op static_cast<U2>(a_rhs.get()));              \
 	}                                                                                                       \
                                                                                                             \
 	template <class E, class U>                                                                             \
 	[[nodiscard]] constexpr auto operator a_op(enumeration<E, U> a_lhs, E a_rhs) noexcept                   \
-		->enumeration<E, U>                                                                                 \
+		-> enumeration<E, U>                                                                                \
 	{                                                                                                       \
 		return static_cast<E>(static_cast<U>(a_lhs.get()) a_op static_cast<U>(a_rhs));                      \
 	}                                                                                                       \
                                                                                                             \
 	template <class E, class U>                                                                             \
 	[[nodiscard]] constexpr auto operator a_op(E a_lhs, enumeration<E, U> a_rhs) noexcept                   \
-		->enumeration<E, U>                                                                                 \
+		-> enumeration<E, U>                                                                                \
 	{                                                                                                       \
 		return static_cast<E>(static_cast<U>(a_lhs) a_op static_cast<U>(a_rhs.get()));                      \
 	}                                                                                                       \
                                                                                                             \
 	template <class E, class U1, class U2>                                                                  \
 	constexpr auto operator a_op##=(enumeration<E, U1>& a_lhs, enumeration<E, U2> a_rhs) noexcept           \
-		->enumeration<E, U1>&                                                                               \
+		-> enumeration<E, U1>&                                                                              \
 	{                                                                                                       \
 		return a_lhs = a_lhs a_op a_rhs;                                                                    \
 	}                                                                                                       \
                                                                                                             \
 	template <class E, class U>                                                                             \
 	constexpr auto operator a_op##=(enumeration<E, U>& a_lhs, E a_rhs) noexcept                             \
-		->enumeration<E, U>&                                                                                \
+		-> enumeration<E, U>&                                                                               \
 	{                                                                                                       \
 		return a_lhs = a_lhs a_op a_rhs;                                                                    \
 	}                                                                                                       \
                                                                                                             \
 	template <class E, class U>                                                                             \
 	constexpr auto operator a_op##=(E& a_lhs, enumeration<E, U> a_rhs) noexcept                             \
-		->E&                                                                                                \
+		-> E&                                                                                               \
 	{                                                                                                       \
 		return a_lhs = *(a_lhs a_op a_rhs);                                                                 \
 	}
@@ -388,14 +391,14 @@ namespace SKSE
 #define SKSE_MAKE_INCREMENTER_OP(a_op)                                                       \
 	template <class E, class U>                                                              \
 	constexpr auto operator a_op##a_op(enumeration<E, U>& a_lhs) noexcept                    \
-		->enumeration<E, U>&                                                                 \
+		-> enumeration<E, U>&                                                                \
 	{                                                                                        \
 		return a_lhs a_op## = static_cast<E>(1);                                             \
 	}                                                                                        \
                                                                                              \
 	template <class E, class U>                                                              \
 	[[nodiscard]] constexpr auto operator a_op##a_op(enumeration<E, U>& a_lhs, int) noexcept \
-		->enumeration<E, U>                                                                  \
+		-> enumeration<E, U>                                                                 \
 	{                                                                                        \
 		const auto tmp = a_lhs;                                                              \
 		a_op##a_op a_lhs;                                                                    \
@@ -501,9 +504,14 @@ namespace SKSE
 		}
 
 		template <class T>
-		void emplace_vtable(T* a_ptr)
+		bool emplace_vtable(T* a_ptr)
 		{
-			reinterpret_cast<std::uintptr_t*>(a_ptr)[0] = T::VTABLE[0].address();
+			auto address = T::VTABLE[0].address();
+			if (!address) {
+				return false;
+			}
+			reinterpret_cast<std::uintptr_t*>(a_ptr)[0] = address;
+			return true;
 		}
 
 		template <class T>
@@ -516,7 +524,7 @@ namespace SKSE
 
 		template <class... Args>
 		[[nodiscard]] inline auto pun_bits(Args... a_args)  //
-			requires(std::same_as<std::remove_cv_t<Args>, bool>&&...)
+			requires(std::same_as<std::remove_cv_t<Args>, bool> && ...)
 		{
 			constexpr auto ARGC = sizeof...(Args);
 
@@ -537,8 +545,8 @@ namespace SKSE
 			-> std::optional<std::wstring>
 		{
 			const auto cvt = [&](wchar_t* a_dst, std::size_t a_length) {
-				return WinAPI::MultiByteToWideChar(
-					WinAPI::CP_UTF8,
+				return REX::W32::MultiByteToWideChar(
+					REX::W32::CP_UTF8,
 					0,
 					a_in.data(),
 					static_cast<int>(a_in.length()),
@@ -563,8 +571,8 @@ namespace SKSE
 			-> std::optional<std::string>
 		{
 			const auto cvt = [&](char* a_dst, std::size_t a_length) {
-				return WinAPI::WideCharToMultiByte(
-					WinAPI::CP_UTF8,
+				return REX::W32::WideCharToMultiByte(
+					REX::W32::CP_UTF8,
 					0,
 					a_in.data(),
 					static_cast<int>(a_in.length()),
@@ -587,9 +595,10 @@ namespace SKSE
 			return out;
 		}
 
-		[[noreturn]] inline void report_and_fail(std::string_view a_msg, std::source_location a_loc = std::source_location::current())
+		inline bool report_and_error(std::string_view a_msg, bool a_fail = true,
+			std::source_location a_loc = std::source_location::current())
 		{
-			const auto body = [&]() {
+			const auto body = [&]() -> std::wstring {
 				const std::filesystem::path p = a_loc.file_name();
 				auto                        filename = p.lexically_normal().generic_string();
 
@@ -600,7 +609,7 @@ namespace SKSE
 				}
 
 				return utf8_to_utf16(
-					fmt::format(
+					std::format(
 						"{}({}): {}"sv,
 						filename,
 						a_loc.line(),
@@ -609,18 +618,17 @@ namespace SKSE
 			}();
 
 			const auto caption = []() {
-				const auto           maxPath = WinAPI::GetMaxPath();
 				std::vector<wchar_t> buf;
-				buf.reserve(maxPath);
-				buf.resize(maxPath / 2);
+				buf.reserve(REX::W32::MAX_PATH);
+				buf.resize(REX::W32::MAX_PATH / 2);
 				std::uint32_t result = 0;
 				do {
 					buf.resize(buf.size() * 2);
-					result = WinAPI::GetModuleFileName(
-						WinAPI::GetCurrentModule(),
+					result = REX::W32::GetModuleFileNameW(
+						REX::W32::GetCurrentModule(),
 						buf.data(),
 						static_cast<std::uint32_t>(buf.size()));
-				} while (result && result == buf.size() && buf.size() <= std::numeric_limits<std::uint32_t>::max());
+				} while (result && result == buf.size() && buf.size() <= (std::numeric_limits<std::uint32_t>::max)());
 
 				if (result && result != buf.size()) {
 					std::filesystem::path p(buf.begin(), buf.begin() + result);
@@ -637,15 +645,22 @@ namespace SKSE
 					a_loc.function_name() },
 				spdlog::level::critical,
 				a_msg);
-			WinAPI::MessageBox(nullptr, body.c_str(), (caption.empty() ? nullptr : caption.c_str()), 0);
-			WinAPI::TerminateProcess(WinAPI::GetCurrentProcess(), EXIT_FAILURE);
+
+			if (a_fail) {
+#ifdef ENABLE_COMMONLIBSSE_TESTING
+				throw std::runtime_error(utf16_to_utf8(caption.empty() ? body.c_str() : caption.c_str())->c_str());
+#else
+				REX::W32::MessageBoxW(nullptr, body.c_str(), (caption.empty() ? nullptr : caption.c_str()), 0);
+				REX::W32::TerminateProcess(REX::W32::GetCurrentProcess(), EXIT_FAILURE);
+#endif
+			}
+			return true;
 		}
 
-		template <class Enum>
-		[[nodiscard]] constexpr auto to_underlying(Enum a_val) noexcept  //
-			requires(std::is_enum_v<Enum>)
+		[[noreturn]] inline void report_and_fail(std::string_view a_msg,
+			std::source_location a_loc = std::source_location::current())
 		{
-			return static_cast<std::underlying_type_t<Enum>>(a_val);
+			report_and_error(a_msg, true, a_loc);
 		}
 
 		template <class To, class From>
@@ -698,23 +713,17 @@ namespace RE
 {
 	using namespace std::literals;
 	namespace stl = SKSE::stl;
-	namespace WinAPI = SKSE::WinAPI;
 }
 
 namespace REL
 {
 	using namespace std::literals;
 	namespace stl = SKSE::stl;
-	namespace WinAPI = SKSE::WinAPI;
 }
 
-#ifdef SKYRIM_SUPPORT_AE
-#	define RELOCATION_ID(SE, AE) REL::RelocationID(SE, AE)
-#else
-#	define RELOCATION_ID(SE, AE) REL::ID(SE)
-#endif
+#define RELOCATION_ID(a_se, a_ae) REL::RelocationID(a_se, a_ae)
 
-#include "REL/Relocation.h"
+#include "REL/REL.h"
 
 #include "RE/Offsets.h"
 #include "RE/Offsets_NiRTTI.h"
@@ -723,3 +732,5 @@ namespace REL
 
 #include "RE/B/BSCoreTypes.h"
 #include "RE/S/SFTypes.h"
+
+#undef cdecl  // Workaround for Clang.

@@ -10,7 +10,7 @@ namespace RE
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraCount;
 		inline static constexpr auto VTABLE = VTABLE_ExtraCount;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kCount;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kCount;
 
 		ExtraCount();
 		explicit ExtraCount(std::int16_t a_count);

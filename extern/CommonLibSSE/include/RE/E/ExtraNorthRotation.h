@@ -10,7 +10,7 @@ namespace RE
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraNorthRotation;
 		inline static constexpr auto VTABLE = VTABLE_ExtraNorthRotation;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kNorthRotation;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kNorthRotation;
 
 		ExtraNorthRotation();
 		~ExtraNorthRotation() override = default;  // 00

@@ -95,7 +95,7 @@ namespace RE
 	void TESObjectREFR::Enable(bool a_resetInventory)
 	{
 		using func_t = decltype(&TESObjectREFR::Enable);
-		static REL::Relocation<func_t> func{ RELOCATION_ID(19373, 19800) };
+		REL::Relocation<func_t> func{ RELOCATION_ID(19373, 19800) };
 		return func(this, a_resetInventory);
 	}
 
@@ -141,7 +141,7 @@ namespace RE
 
 	float TESObjectREFR::GetBaseHeight() const
 	{
-		auto height = static_cast<float>(refScale) / 100.0F;
+		auto height = static_cast<float>(GetReferenceRuntimeData().refScale) / 100.0F;
 		auto obj = GetObjectReference();
 		auto npc = obj ? obj->As<TESNPC>() : nullptr;
 		if (npc) {
@@ -236,7 +236,7 @@ namespace RE
 			} else {
 				auto mapped = std::make_pair(count, container_t());
 				mapped.second.push_back(handle);
-				auto insIt = results.emplace(object, std::move(mapped));
+				[[maybe_unused]] auto insIt = results.emplace(object, std::move(mapped));
 				assert(insIt.second);
 			}
 		}
@@ -354,8 +354,8 @@ namespace RE
 				const auto it = results.find(a_object);
 				const auto entryData =
 					it != results.end() ?
-                        it->second.second.get() :
-                        nullptr;
+						it->second.second.get() :
+						nullptr;
 				return entryData ? entryData->IsLeveled() : false;
 			};
 
@@ -535,7 +535,7 @@ namespace RE
 		}
 
 		if (cell && cell->IsExteriorCell()) {
-			return cell->worldSpace;
+			return cell->GetRuntimeData().worldSpace;
 		} else {
 			return nullptr;
 		}
@@ -562,7 +562,7 @@ namespace RE
 
 		for (const auto& keyword : a_keywords) {
 			hasKeyword = keyword && HasKeyword(keyword);
-			if (a_matchAll && !hasKeyword || hasKeyword) {
+			if ((a_matchAll && !hasKeyword) || hasKeyword) {
 				break;
 			}
 		}
@@ -578,10 +578,10 @@ namespace RE
 
 		bool hasKeyword = false;
 
-		a_keywordList->ForEachForm([&](TESForm& a_form) {
-			const auto keyword = a_form.As<BGSKeyword>();
+		a_keywordList->ForEachForm([&](TESForm* a_form) {
+			const auto keyword = a_form->As<BGSKeyword>();
 			hasKeyword = keyword && HasKeyword(keyword);
-			if (a_matchAll && !hasKeyword || hasKeyword) {
+			if ((a_matchAll && !hasKeyword) || hasKeyword) {
 				return BSContainer::ForEachResult::kStop;
 			}
 			return BSContainer::ForEachResult::kContinue;
@@ -590,14 +590,14 @@ namespace RE
 		return hasKeyword;
 	}
 
-	bool TESObjectREFR::HasKeywordWithType(DEFAULT_OBJECT keywordType) const
+	bool TESObjectREFR::HasKeywordWithType(DefaultObjectID keywordType) const
 	{
 		auto dobj = BGSDefaultObjectManager::GetSingleton();
 		if (!dobj) {
 			return false;
 		}
 
-		auto keyword = dobj->GetObject<BGSKeyword>(keywordType);
+		auto keyword = *dobj->GetObject<BGSKeyword>(keywordType);
 		return keyword ? HasKeyword(keyword) : false;
 	}
 
@@ -635,7 +635,7 @@ namespace RE
 
 	bool TESObjectREFR::IsAnimal() const
 	{
-		return HasKeywordWithType(DEFAULT_OBJECT::kKeywordAnimal);
+		return HasKeywordWithType(DefaultObjectID::kKeywordAnimal);
 	}
 
 	bool TESObjectREFR::IsAnOwner(const Actor* a_testOwner, bool a_useFaction, bool a_requiresOwner) const
@@ -659,7 +659,7 @@ namespace RE
 
 	bool TESObjectREFR::IsDragon() const
 	{
-		return HasKeywordWithType(DEFAULT_OBJECT::kKeywordDragon);
+		return HasKeywordWithType(DefaultObjectID::kKeywordDragon);
 	}
 
 	bool TESObjectREFR::IsEnchanted() const
@@ -682,12 +682,18 @@ namespace RE
 
 	bool TESObjectREFR::IsHorse() const
 	{
-		return HasKeywordWithType(DEFAULT_OBJECT::kKeywordHorse);
+		auto dobj = BGSDefaultObjectManager::GetSingleton();
+		if (!dobj) {
+			return false;
+		}
+
+		auto keyword = dobj->GetObject<BGSKeyword>(DefaultObjectID::kKeywordHorse);
+		return keyword && *keyword ? HasKeyword(*keyword) : false;
 	}
 
 	bool TESObjectREFR::IsHumanoid() const
 	{
-		return HasKeywordWithType(DEFAULT_OBJECT::kKeywordNPC);
+		return HasKeywordWithType(DefaultObjectID::kKeywordNPC);
 	}
 
 	bool TESObjectREFR::IsInitiallyDisabled() const
@@ -697,7 +703,7 @@ namespace RE
 
 	bool TESObjectREFR::IsJewelry() const
 	{
-		return HasKeywordWithType(DEFAULT_OBJECT::kKeywordJewelry);
+		return HasKeywordWithType(DefaultObjectID::kKeywordJewelry);
 	}
 
 	bool TESObjectREFR::IsInWater() const
@@ -790,6 +796,13 @@ namespace RE
 		return name.find(a_word) != std::string::npos;
 	}
 
+	void TESObjectREFR::OpenContainer(std::int32_t a_openType) const
+	{
+		using func_t = decltype(&TESObjectREFR::OpenContainer);
+		REL::Relocation<func_t> func{ RELOCATION_ID(50211, 51140) };
+		func(this, a_openType);
+	}
+
 	NiPointer<TESObjectREFR> TESObjectREFR::PlaceObjectAtMe(TESBoundObject* a_baseToPlace, bool a_forcePersist) const
 	{
 		const auto handle = TESDataHandler::GetSingleton()->CreateReferenceAtLocation(a_baseToPlace, GetPosition(), GetAngle(), GetParentCell(), GetWorldspace(), nullptr, nullptr, ObjectRefHandle(), a_forcePersist, true);
@@ -863,12 +876,6 @@ namespace RE
 		return renamed;
 	}
 
-	void TESObjectREFR::SetEncounterZone(BGSEncounterZone* a_zone)
-	{
-		extraList.SetEncounterZone(a_zone);
-		AddChange(ChangeFlags::kEncZoneExtra);
-	}
-
 	bool TESObjectREFR::SetMotionType(MotionType a_motionType, bool a_allowActivate)
 	{
 		auto node = Get3D();
@@ -923,4 +930,156 @@ namespace RE
 		REL::Relocation<func_t> func{ Offset::TESObjectREFR::PlayAnimation };
 		return func(this, a_manager, a_toSeq, a_fromSeq, a_arg4);
 	}
+
+#ifdef SKYRIM_CROSS_VR
+	void TESObjectREFR::SetObjectReference(TESBoundObject* a_object)
+	{
+		REL::RelocateVirtual<decltype(&TESObjectREFR::SetObjectReference)>(0x84, 0x85, this, a_object);
+	}
+
+	void TESObjectREFR::MoveHavok(bool a_forceRec)
+	{
+		REL::RelocateVirtual<decltype(&TESObjectREFR::MoveHavok)>(0x85, 0x86, this, a_forceRec);
+	}
+
+	void TESObjectREFR::GetLinearVelocity(NiPoint3& a_velocity) const
+	{
+		REL::RelocateVirtual<decltype(&TESObjectREFR::GetLinearVelocity)>(0x86, 0x87, this, a_velocity);
+	}
+
+	void TESObjectREFR::SetActionComplete(bool a_set)
+	{
+		REL::RelocateVirtual<decltype(&TESObjectREFR::SetActionComplete)>(0x87, 0x88, this, a_set);
+	}
+
+	void TESObjectREFR::SetMovementComplete(bool a_set)
+	{
+		REL::RelocateVirtual<decltype(&TESObjectREFR::SetMovementComplete)>(0x88, 0x89, this, a_set);
+	}
+
+	void TESObjectREFR::Disable()
+	{
+		REL::RelocateVirtual<decltype(&TESObjectREFR::Disable)>(0x89, 0x8A, this);
+	}
+
+	void TESObjectREFR::ResetInventory(bool a_leveledOnly)
+	{
+		REL::RelocateVirtual<decltype(&TESObjectREFR::ResetInventory)>(0x8A, 0x8B, this, a_leveledOnly);
+	}
+
+	NiNode* TESObjectREFR::GetFireNode()
+	{
+		return REL::RelocateVirtual<decltype(&TESObjectREFR::GetFireNode)>(0x8B, 0x8C, this);
+	}
+
+	void TESObjectREFR::SetFireNode(NiNode* a_fireNode)
+	{
+		REL::RelocateVirtual<decltype(&TESObjectREFR::SetFireNode)>(0x8C, 0x8D, this, a_fireNode);
+	}
+
+	NiAVObject* TESObjectREFR::GetCurrent3D() const
+	{
+		return REL::RelocateVirtual<decltype(&TESObjectREFR::GetCurrent3D)>(0x8D, 0x8E, this);
+	}
+
+	Explosion* TESObjectREFR::AsExplosion()
+	{
+		return REL::RelocateVirtual<decltype(&TESObjectREFR::AsExplosion)>(0x8E, 0x8F, this);
+	}
+
+	Projectile* TESObjectREFR::AsProjectile()
+	{
+		return REL::RelocateVirtual<decltype(&TESObjectREFR::AsProjectile)>(0x8F, 0x90, this);
+	}
+
+	bool TESObjectREFR::OnAddCellPerformQueueReference(TESObjectCELL& a_cell) const
+	{
+		return REL::RelocateVirtual<decltype(&TESObjectREFR::OnAddCellPerformQueueReference)>(0x90, 0x91, this, a_cell);
+	}
+
+	void TESObjectREFR::DoMoveToHigh()
+	{
+		REL::RelocateVirtual<decltype(&TESObjectREFR::DoMoveToHigh)>(0x91, 0x92, this);
+	}
+
+	void TESObjectREFR::TryMoveToMiddleLow()
+	{
+		REL::RelocateVirtual<decltype(&TESObjectREFR::TryMoveToMiddleLow)>(0x92, 0x93, this);
+	}
+
+	bool TESObjectREFR::TryChangeSkyCellActorsProcessLevel()
+	{
+		return REL::RelocateVirtual<decltype(&TESObjectREFR::TryChangeSkyCellActorsProcessLevel)>(0x93, 0x94, this);
+	}
+
+	void TESObjectREFR::Unk_94()
+	{
+		REL::RelocateVirtual<decltype(&TESObjectREFR::Unk_94)>(0x94, 0x95, this);
+	}
+
+	void TESObjectREFR::TryUpdateActorLastSeenTime()
+	{
+		REL::RelocateVirtual<decltype(&TESObjectREFR::TryUpdateActorLastSeenTime)>(0x95, 0x96, this);
+	}
+
+	void TESObjectREFR::Unk_96()
+	{
+		REL::RelocateVirtual<decltype(&TESObjectREFR::Unk_96)>(0x96, 0x97, this);
+	}
+
+	TESObjectCELL* TESObjectREFR::GetSaveParentCell() const
+	{
+		return REL::RelocateVirtual<decltype(&TESObjectREFR::GetSaveParentCell)>(0x97, 0x98, this);
+	}
+
+	void TESObjectREFR::SetParentCell(TESObjectCELL* a_cell)
+	{
+		REL::RelocateVirtual<decltype(&TESObjectREFR::SetParentCell)>(0x98, 0x99, this, a_cell);
+	}
+
+	bool TESObjectREFR::IsDead(bool a_notEssential) const
+	{
+		return REL::RelocateVirtual<decltype(&TESObjectREFR::IsDead)>(0x99, 0x9A, this, a_notEssential);
+	}
+
+	BSAnimNoteReceiver* TESObjectREFR::CreateAnimNoteReceiver()
+	{
+		return REL::RelocateVirtual<decltype(&TESObjectREFR::CreateAnimNoteReceiver)>(0x9A, 0x9B, this);
+	}
+
+	BSAnimNoteReceiver* TESObjectREFR::GetAnimNoteReceiver()
+	{
+		return REL::RelocateVirtual<decltype(&TESObjectREFR::GetAnimNoteReceiver)>(0x9B, 0x9C, this);
+	}
+
+	bool TESObjectREFR::ProcessInWater(hkpCollidable* a_collidable, float a_waterHeight, float a_deltaTime)
+	{
+		return REL::RelocateVirtual<decltype(&TESObjectREFR::ProcessInWater)>(0x9C, 0x9D, this, a_collidable, a_waterHeight, a_deltaTime);
+	}
+
+	bool TESObjectREFR::ApplyCurrent(float a_velocityTime, const hkVector4& a_velocity)
+	{
+		return REL::RelocateVirtual<decltype(&TESObjectREFR::ApplyCurrent)>(0x9D, 0x9E, this, a_velocityTime, a_velocity);
+	}
+
+	TESAmmo* TESObjectREFR::GetCurrentAmmo() const
+	{
+		return REL::RelocateVirtual<decltype(&TESObjectREFR::GetCurrentAmmo)>(0x9E, 0x9F, this);
+	}
+
+	BGSDecalGroup* TESObjectREFR::GetDecalGroup() const
+	{
+		return REL::RelocateVirtual<decltype(&TESObjectREFR::GetDecalGroup)>(0x9F, 0xA0, this);
+	}
+
+	bool TESObjectREFR::Unk_A0(NiAVObject* a_node, float& a_angleX, float& a_angleZ, NiPoint3& a_pos)
+	{
+		return REL::RelocateVirtual<decltype(&TESObjectREFR::Unk_A0)>(0xA0, 0xA1, this, a_node, a_angleX, a_angleZ, a_pos);
+	}
+
+	void TESObjectREFR::UnequipItem(std::uint64_t a_arg1, TESBoundObject* a_object)
+	{
+		REL::RelocateVirtual<decltype(&TESObjectREFR::UnequipItem)>(0xA1, 0xA2, this, a_arg1, a_object);
+	}
+#endif
 }

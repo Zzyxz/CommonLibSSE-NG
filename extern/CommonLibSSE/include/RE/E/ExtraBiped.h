@@ -12,7 +12,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraBiped;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kBiped;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kBiped;
 
 		~ExtraBiped() override;  // 00
 

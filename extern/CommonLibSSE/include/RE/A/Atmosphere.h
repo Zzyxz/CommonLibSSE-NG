@@ -15,10 +15,10 @@ namespace RE
 		inline static constexpr auto RTTI = RTTI_Atmosphere;
 		inline static constexpr auto VTABLE = VTABLE_Atmosphere;
 
-		virtual ~Atmosphere();  // 00
+		~Atmosphere() override;  // 00
 
 		// override (SkyObject)
-		virtual void Update(Sky* a_sky, float a_arg2) override;  // 03
+		void Update(Sky* a_sky, float a_arg2) override;  // 03
 
 		// add
 		virtual void Unk_04(void);  // 04

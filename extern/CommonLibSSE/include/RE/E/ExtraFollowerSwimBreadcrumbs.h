@@ -30,12 +30,12 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraFollowerSwimBreadcrumbs;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kFollowerSwimBreadcrumbs;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kFollowerSwimBreadcrumbs;
 
-		virtual ~ExtraFollowerSwimBreadcrumbs();  // 00
+		~ExtraFollowerSwimBreadcrumbs() override;  // 00
 
 		// override (BSExtraData)
-		virtual ExtraDataType GetType() const override;  // 01 - { return kFollowerSwimBreadcrumbs; }
+		ExtraDataType GetType() const override;  // 01 - { return kFollowerSwimBreadcrumbs; }
 
 		// members
 		stl::enumeration<BREADCRUMB_STATE, std::uint32_t> leaderState;      // 10

@@ -11,7 +11,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_bhkNiCollisionObject;
-		inline static constexpr auto Ni_RTTI = NiRTTI_bhkNiCollisionObject;
+		inline static auto           Ni_RTTI = NiRTTI_bhkNiCollisionObject;
 
 		enum class Flag
 		{

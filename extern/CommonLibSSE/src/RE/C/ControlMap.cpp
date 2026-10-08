@@ -12,6 +12,7 @@ namespace RE
 
 	std::int8_t ControlMap::AllowTextInput(bool a_allow)
 	{
+		auto& textEntryCount = GetRuntimeData().textEntryCount;
 		if (a_allow) {
 			if (textEntryCount != -1) {
 				++textEntryCount;
@@ -30,8 +31,8 @@ namespace RE
 		assert(a_device < INPUT_DEVICE::kTotal);
 		assert(a_context < InputContextID::kTotal);
 
-		if (controlMap[a_context]) {
-			const auto&   mappings = controlMap[a_context]->deviceMappings[a_device];
+		if (const auto* context = GetInputContext(a_context); context) {
+			const auto&   mappings = context->deviceMappings[a_device];
 			BSFixedString eventID(a_eventID);
 			for (auto& mapping : mappings) {
 				if (mapping.eventID == eventID) {
@@ -48,8 +49,8 @@ namespace RE
 		assert(a_device < INPUT_DEVICE::kTotal);
 		assert(a_context < InputContextID::kTotal);
 
-		if (controlMap[a_context]) {
-			const auto&      mappings = controlMap[a_context]->deviceMappings[a_device];
+		if (const auto* context = GetInputContext(a_context); context) {
+			const auto&      mappings = context->deviceMappings[a_device];
 			UserEventMapping tmp{};
 			tmp.inputKey = static_cast<std::uint16_t>(a_buttonID);
 			auto range = std::equal_range(
@@ -70,35 +71,36 @@ namespace RE
 
 	void ControlMap::PopInputContext(InputContextID a_context)
 	{
-		using func_t = decltype(&ControlMap::PopInputContext);
+		using func_t = void(ControlMap*, std::uint32_t);
 		REL::Relocation<func_t> func{ RELOCATION_ID(67244, 68544) };
-		return func(this, a_context);
+		return func(this, ToGameContext(a_context));
 	}
 
 	void ControlMap::PushInputContext(InputContextID a_context)
 	{
-		using func_t = decltype(&ControlMap::PushInputContext);
+		using func_t = void(ControlMap*, std::uint32_t);
 		REL::Relocation<func_t> func{ RELOCATION_ID(67243, 68543) };
-		return func(this, a_context);
+		return func(this, ToGameContext(a_context));
 	}
 
 	void ControlMap::ToggleControls(UEFlag a_flags, bool a_enable)
 	{
-		auto oldState = enabledControls;
+		auto&      data = GetRuntimeData();
+		const auto oldState = data.enabledControls;
 
 		if (a_enable) {
-			enabledControls.set(a_flags);
-			if (unk11C != UEFlag::kInvalid) {
-				unk11C.set(a_flags);
+			data.enabledControls.set(a_flags);
+			if (data.unk11C != UEFlag::kInvalid) {
+				data.unk11C.set(a_flags);
 			}
 		} else {
-			enabledControls.reset(a_flags);
-			if (unk11C != UEFlag::kInvalid) {
-				unk11C.reset(a_flags);
+			data.enabledControls.reset(a_flags);
+			if (data.unk11C != UEFlag::kInvalid) {
+				data.unk11C.reset(a_flags);
 			}
 		}
 
-		UserEventEnabled event{ enabledControls, oldState };
+		UserEventEnabled event{ data.enabledControls, oldState };
 		SendEvent(std::addressof(event));
 	}
 }

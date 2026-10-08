@@ -25,14 +25,14 @@ namespace RE
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraLightData;
 		inline static constexpr auto VTABLE = VTABLE_ExtraLightData;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kLightData;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kLightData;
 
 		ExtraLightData();
-		virtual ~ExtraLightData() = default;  // 00
+		~ExtraLightData() override = default;  // 00
 
 		// override (BSExtraData)
-		virtual ExtraDataType GetType() const override;                             // 01 - { return kLightData; }
-		virtual bool          IsNotEqual(const BSExtraData* a_rhs) const override;  // 02
+		ExtraDataType GetType() const override;                             // 01 - { return kLightData; }
+		bool          IsNotEqual(const BSExtraData* a_rhs) const override;  // 02
 
 		// members
 		ExtraLightDataStruct data;   // 10

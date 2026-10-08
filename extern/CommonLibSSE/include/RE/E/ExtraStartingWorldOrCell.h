@@ -11,12 +11,12 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraStartingWorldOrCell;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kStartingWorldOrCell;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kStartingWorldOrCell;
 
-		virtual ~ExtraStartingWorldOrCell();  // 00
+		~ExtraStartingWorldOrCell() override;  // 00
 
 		// override (BSExtraData)
-		virtual ExtraDataType GetType() const override;  // 01 - { return kStartingWorldOrCell; }
+		ExtraDataType GetType() const override;  // 01 - { return kStartingWorldOrCell; }
 
 		// members
 		TESForm* startingWorldOrCell;  // 10

@@ -10,12 +10,12 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraEditorRefMoveData;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kEditorRefMoveData;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kEditorRefMoveData;
 
-		virtual ~ExtraEditorRefMoveData();  // 00
+		~ExtraEditorRefMoveData() override;  // 00
 
 		// override (BSExtraData)
-		virtual ExtraDataType GetType() const override;  // 01 - { return kEditorRefMoveData; }
+		ExtraDataType GetType() const override;  // 01 - { return kEditorRefMoveData; }
 
 		// members
 		NiPoint3      realAngle;     // 10

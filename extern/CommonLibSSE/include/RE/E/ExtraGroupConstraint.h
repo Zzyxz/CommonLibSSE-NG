@@ -12,12 +12,12 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraGroupConstraint;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kGroupConstraint;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kGroupConstraint;
 
-		virtual ~ExtraGroupConstraint();  // 00
+		~ExtraGroupConstraint() override;  // 00
 
 		// override (BSExtraData)
-		virtual ExtraDataType GetType() const override;  // 01 - { return kGroupConstraint; }
+		ExtraDataType GetType() const override;  // 01 - { return kGroupConstraint; }
 
 		// members
 		std::int32_t    constraintType;           // 10

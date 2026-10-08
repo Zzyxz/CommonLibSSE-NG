@@ -11,13 +11,13 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraPrimitive;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kPrimitive;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kPrimitive;
 
-		virtual ~ExtraPrimitive();  // 00
+		~ExtraPrimitive() override;  // 00
 
 		// override (BSExtraData)
-		virtual ExtraDataType GetType() const override;                             // 01 - { return kPrimitive; }
-		virtual bool          IsNotEqual(const BSExtraData* a_rhs) const override;  // 02 - { return primitive != a_rhs->primitive; }
+		ExtraDataType GetType() const override;                             // 01 - { return kPrimitive; }
+		bool          IsNotEqual(const BSExtraData* a_rhs) const override;  // 02 - { return primitive != a_rhs->primitive; }
 
 		// members
 		BGSPrimitive* primitive;  // 10

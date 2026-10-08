@@ -30,7 +30,7 @@ namespace RE
 	Actor* ActiveEffect::GetTargetActor()
 	{
 		if (target && target->MagicTargetIsActor()) {
-			return static_cast<Actor*>(target);
+			return reinterpret_cast<Actor*>(target);
 		} else {
 			return nullptr;
 		}
@@ -39,7 +39,7 @@ namespace RE
 	const Actor* ActiveEffect::GetTargetActor() const
 	{
 		if (target && target->MagicTargetIsActor()) {
-			return static_cast<const Actor*>(target);
+			return reinterpret_cast<const Actor*>(target);
 		} else {
 			return nullptr;
 		}

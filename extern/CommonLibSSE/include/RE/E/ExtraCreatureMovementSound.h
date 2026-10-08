@@ -10,12 +10,12 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraCreatureMovementSound;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kCreatureMovementSound;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kCreatureMovementSound;
 
-		virtual ~ExtraCreatureMovementSound();  // 00
+		~ExtraCreatureMovementSound() override;  // 00
 
 		// override (BSExtraData)
-		virtual ExtraDataType GetType() const override;  // 01 - { return kCreatureMovementSound; }
+		ExtraDataType GetType() const override;  // 01 - { return kCreatureMovementSound; }
 
 		// members
 		BSSoundHandle handle;  // 10

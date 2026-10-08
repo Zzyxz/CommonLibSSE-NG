@@ -19,6 +19,31 @@ namespace RE
 		inline static constexpr auto      RTTI = RTTI_BarterMenu;
 		constexpr static std::string_view MENU_NAME = "BarterMenu";
 
+		struct RUNTIME_DATA
+		{
+#define RUNTIME_DATA_CONTENT                              \
+	ItemList*       itemList;        /* 00 */             \
+	ItemCard*       itemCard;        /* 08 */             \
+	BottomBar*      bottomBar;       /* 10 */             \
+	GFxValue        root;            /* 18 - "Menu_mc" */ \
+	std::uint64_t   unk60;           /* 30 */             \
+	std::uint64_t   unk68;           /* 38 */             \
+	std::uint64_t   unk70;           /* 40 */             \
+	std::uint8_t    unk78;           /* 48 */             \
+	std::uint8_t    pad79;           /* 49 */             \
+	std::uint16_t   pad7A;           /* 4A */             \
+	std::uint32_t   pad7C;           /* 4C */             \
+	BSTArray<void*> unk80;           /* 50 */             \
+	std::uint64_t   unk98;           /* 68 */             \
+	std::uint32_t   unkA0;           /* 70 */             \
+	bool            pcControlsReady; /* 74 */             \
+	std::uint8_t    padA5;           /* 75 */             \
+	std::uint16_t   padA6;           /* 76 */
+
+			RUNTIME_DATA_CONTENT
+		};
+		static_assert(sizeof(RUNTIME_DATA) == 0x78);
+
 		~BarterMenu() override;  // 00
 
 		// override (IMenu)
@@ -28,24 +53,25 @@ namespace RE
 
 		[[nodiscard]] static RefHandle GetTargetRefHandle();
 
+		[[nodiscard]] inline RUNTIME_DATA& GetRuntimeData() noexcept
+		{
+			return REL::RelocateMember<RUNTIME_DATA>(this, 0x30, 0x40);
+		}
+
+		[[nodiscard]] inline const RUNTIME_DATA& GetRuntimeData() const noexcept
+		{
+			return REL::RelocateMember<RUNTIME_DATA>(this, 0x30, 0x40);
+		}
+
 		// members
-		ItemList*       itemList;         // 30
-		ItemCard*       itemCard;         // 38
-		BottomBar*      bottomBar;        // 40
-		GFxValue        root;             // 48 - "Menu_mc"
-		std::uint64_t   unk60;            // 60
-		std::uint64_t   unk68;            // 68
-		std::uint64_t   unk70;            // 70
-		std::uint8_t    unk78;            // 78
-		std::uint8_t    pad79;            // 79
-		std::uint16_t   pad7A;            // 7A
-		std::uint32_t   pad7C;            // 7C
-		BSTArray<void*> unk80;            // 80
-		std::uint64_t   unk98;            // 98
-		std::uint32_t   unkA0;            // A0
-		bool            pcControlsReady;  // A4
-		std::uint8_t    padA5;            // A5
-		std::uint16_t   padA6;            // A6
+#ifndef SKYRIM_CROSS_VR
+		RUNTIME_DATA_CONTENT  // 30, 40
+#endif
 	};
+#ifndef ENABLE_SKYRIM_VR
 	static_assert(sizeof(BarterMenu) == 0xA8);
+#elif !defined(ENABLE_SKYRIM_AE) && !defined(ENABLE_SKYRIM_SE)
+	static_assert(sizeof(BarterMenu) == 0xB8);
+#endif
 }
+#undef RUNTIME_DATA_CONTENT

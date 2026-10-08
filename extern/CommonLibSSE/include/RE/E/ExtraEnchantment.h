@@ -11,7 +11,7 @@ namespace RE
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraEnchantment;
 		inline static constexpr auto VTABLE = VTABLE_ExtraEnchantment;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kEnchantment;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kEnchantment;
 
 		ExtraEnchantment();
 		ExtraEnchantment(EnchantmentItem* a_enchantment, std::uint16_t a_charge, bool a_removeOnUnequip = false);

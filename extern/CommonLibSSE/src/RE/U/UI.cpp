@@ -73,7 +73,7 @@ namespace RE
 		return numCustomRendering > 0;
 	}
 
-	void UI::Register(const std::string_view& a_menuName, Create_t* a_creator)
+	void UI::Register(std::string_view a_menuName, Create_t* a_creator)
 	{
 		menuMap.insert({ a_menuName, { nullptr, a_creator } });
 	}

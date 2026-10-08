@@ -10,7 +10,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraGuardedRefData;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kGuardedRefData;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kGuardedRefData;
 
 		struct GuardInfo
 		{
@@ -20,11 +20,11 @@ namespace RE
 		};
 		static_assert(sizeof(GuardInfo) == 0xC);
 
-		virtual ~ExtraGuardedRefData();  // 00
+		~ExtraGuardedRefData() override;  // 00
 
 		// override (BSExtraData)
-		virtual ExtraDataType GetType() const override;                             // 01 - { return kGuardedRefData; }
-		virtual bool          IsNotEqual(const BSExtraData* a_rhs) const override;  // 02
+		ExtraDataType GetType() const override;                             // 01 - { return kGuardedRefData; }
+		bool          IsNotEqual(const BSExtraData* a_rhs) const override;  // 02
 
 		// members
 		BSTArray<GuardInfo> guards;  // 10

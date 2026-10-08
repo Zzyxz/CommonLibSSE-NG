@@ -206,13 +206,6 @@ namespace RE
 		});
 	}
 
-	bool TESNPC::HasFaction(TESFaction* a_faction) const
-	{
-		return std::ranges::any_of(factions, [&](const auto& faction) {
-			return faction.faction == a_faction;
-		});
-	}
-
 	bool TESNPC::RemovePerk(BGSPerk* a_perk)
 	{
 		if (const auto index = GetPerkIndex(a_perk); index.has_value()) {

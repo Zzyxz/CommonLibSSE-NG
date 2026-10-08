@@ -104,7 +104,7 @@ namespace RE
 		requires is_return_convertible_v<V>
 		void IVirtualMachine::ReturnLatentResult(VMStackID a_stackID, V a_result)
 		{
-			auto var = RE::BSScript::Variable::Variable();
+			RE::BSScript::Variable var;
 			var.Pack(a_result);
 			ReturnFromLatent(a_stackID, var);
 		}

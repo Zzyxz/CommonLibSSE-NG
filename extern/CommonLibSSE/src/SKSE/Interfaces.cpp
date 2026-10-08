@@ -5,6 +5,10 @@
 #include "SKSE/API.h"
 #include "SKSE/Logger.h"
 
+#include <Windows.h>
+
+EXTERN_C IMAGE_DOS_HEADER __ImageBase;
+
 namespace SKSE
 {
 	std::uint32_t QueryInterface::EditorVersion() const
@@ -340,5 +344,10 @@ namespace SKSE
 	{
 		assert(this);
 		return reinterpret_cast<const detail::SKSETrampolineInterface*>(this);
+	}
+
+	[[nodiscard]] const PluginDeclaration* PluginDeclaration::GetSingleton() noexcept
+	{
+		return reinterpret_cast<const PluginDeclaration*>(GetProcAddress(reinterpret_cast<HMODULE>(&__ImageBase), "SKSEPlugin_Version"));
 	}
 }

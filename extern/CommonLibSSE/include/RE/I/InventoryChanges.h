@@ -10,6 +10,7 @@ namespace RE
 {
 	class ExtraDataList;
 	class InventoryEntryData;
+	class TESBoundObject;
 
 	class InventoryChanges
 	{
@@ -20,7 +21,7 @@ namespace RE
 			inline static constexpr auto RTTI = RTTI_InventoryChanges__IItemChangeVisitor;
 			inline static constexpr auto VTABLE = VTABLE_InventoryChanges__IItemChangeVisitor;
 
-			virtual ~IItemChangeVisitor() = default;  // 00
+			virtual ~IItemChangeVisitor();  // 00
 
 			// add
 			virtual BSContainer::ForEachResult Visit(InventoryEntryData* a_entryData) = 0;                                                                                // 01
@@ -39,6 +40,7 @@ namespace RE
 
 		void           AddEntryData(InventoryEntryData* a_entry);
 		TESObjectARMO* GetArmorInSlot(std::int32_t a_slot);
+		float          GetInventoryWeight();
 		std::uint16_t  GetNextUniqueID();
 		std::uint32_t  GetWornMask();
 		void           InitFromContainerExtra();
@@ -50,6 +52,8 @@ namespace RE
 		void           SendContainerChangedEvent(ExtraDataList* a_itemExtraList, TESObjectREFR* a_fromRefr, TESForm* a_item, std::int32_t a_count);
 		void           SetFavorite(InventoryEntryData* a_entry, ExtraDataList* a_itemList);
 		void           SetUniqueID(ExtraDataList* a_itemList, TESForm* a_oldForm, TESForm* a_newForm);
+		void           GenerateLeveledListChanges();
+		std::int16_t   GetItemCount(RE::TESBoundObject* a_obj);
 		void           VisitInventory(IItemChangeVisitor& visitor);
 		void           VisitWornItems(IItemChangeVisitor& visitor);
 

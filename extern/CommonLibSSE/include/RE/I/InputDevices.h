@@ -11,9 +11,14 @@ namespace RE
 			kMouse,
 			kGamepad,
 			kVirtualKeyboard,
+#ifdef ENABLE_SKYRIM_VR
+			kVRRight = 5,
+			kVRLeft = 6,
+#endif
 
 			kTotal
 		};
+		static_assert(sizeof(INPUT_DEVICE) == 0x4);
 	};
 	using INPUT_DEVICE = INPUT_DEVICES::INPUT_DEVICE;
 }

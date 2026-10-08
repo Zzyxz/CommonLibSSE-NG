@@ -11,12 +11,12 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraEnableStateChildren;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kEnableStateChildren;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kEnableStateChildren;
 
-		virtual ~ExtraEnableStateChildren();  // 00
+		~ExtraEnableStateChildren() override;  // 00
 
 		// override (BSExtraData)
-		virtual ExtraDataType GetType() const override;  // 01 - { return kEnableStateChildren; }
+		ExtraDataType GetType() const override;  // 01 - { return kEnableStateChildren; }
 
 		// members
 		BSSimpleList<ObjectRefHandle> children;  // 10

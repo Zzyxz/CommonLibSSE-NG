@@ -10,7 +10,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_BSLightingShaderProperty;
-		inline static constexpr auto Ni_RTTI = NiRTTI_BSLightingShaderProperty;
+		inline static auto           Ni_RTTI = NiRTTI_BSLightingShaderProperty;
 
 		struct Data
 		{

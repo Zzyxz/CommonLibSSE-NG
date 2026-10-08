@@ -9,7 +9,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraOutfitItem;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kOutfitItem;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kOutfitItem;
 
 		~ExtraOutfitItem() override;  // 00
 

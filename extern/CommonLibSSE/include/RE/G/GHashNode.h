@@ -56,11 +56,6 @@ namespace RE
 		};
 		static_assert(sizeof(NodeAltHashF) == 0x1);
 
-		GHashNode(const GHashNode& a_src) :
-			first(a_src.first),
-			second(a_src.second)
-		{}
-
 		GHashNode(const NodeRef& a_src) :
 			first(*a_src.first),
 			second(*a_src.second)

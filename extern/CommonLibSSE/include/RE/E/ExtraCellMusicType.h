@@ -11,7 +11,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraCellMusicType;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kCellMusicType;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kCellMusicType;
 
 		~ExtraCellMusicType() override;  // 00
 

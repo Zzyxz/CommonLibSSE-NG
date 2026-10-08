@@ -20,7 +20,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraAction;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kAction;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kAction;
 
 		~ExtraAction() override;  // 00
 

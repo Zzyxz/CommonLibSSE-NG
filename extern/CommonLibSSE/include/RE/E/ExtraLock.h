@@ -49,7 +49,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraLock;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kLock;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kLock;
 
 		~ExtraLock() override;  // 00
 

@@ -10,7 +10,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_bhkShape;
-		inline static constexpr auto Ni_RTTI = NiRTTI_bhkShape;
+		inline static auto           Ni_RTTI = NiRTTI_bhkShape;
 		inline static constexpr auto VTABLE = VTABLE_bhkShape;
 
 		~bhkShape() override;  // 00

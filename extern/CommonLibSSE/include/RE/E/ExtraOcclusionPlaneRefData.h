@@ -16,7 +16,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraOcclusionPlaneRefData;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kOcclusionPlaneRefData;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kOcclusionPlaneRefData;
 
 		~ExtraOcclusionPlaneRefData() override;  // 00
 

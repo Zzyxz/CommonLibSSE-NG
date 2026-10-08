@@ -101,8 +101,7 @@ namespace RE
 		std::uint64_t                            unk0C0;           // 0C0
 		std::uint64_t                            unk0C8;           // 0C8
 		std::uint64_t                            currentPlayerID;  // 0D0
-		std::uint32_t                            unk0D8;           // 0D8
-		std::uint32_t                            unk0DC;           // 0DC
+		std::uint64_t                            displayPlayerID;  // 0D8
 		std::uint32_t                            unk0E0;           // 0E0
 		std::uint32_t                            unk0E4;           // 0E4
 		BSTArray<void*>                          unk0E8;           // 0E8
@@ -175,13 +174,38 @@ namespace RE
 		std::uint32_t unk2A0;  // 2A0
 		std::uint32_t unk2A4;  // 2A4
 		std::uint64_t unk2A8;  // 2A8
-		Thread        unk2B0;  // 2B0
 
-		BSTCommonStaticMessageQueue<BSTSmartPointer<bgs::saveload::Request>, 8> unk370;  // 370
+		// AE adds 0x48 bytes at 0x2B0 (two arrays and a few values), so thread and the queue lie 0x48 later.
+		struct RUNTIME_DATA
+		{
+#define RUNTIME_DATA_CONTENT                                                                                   \
+	Thread                                                                   thread; /* 2B0, 2F8 */            \
+	BSTCommonStaticMessageQueue<BSTSmartPointer<bgs::saveload::Request>, 8> unk370; /* 370, 3B8 */
+
+			RUNTIME_DATA_CONTENT
+		};
+		static_assert(sizeof(RUNTIME_DATA) == 0x120);
+
+		[[nodiscard]] RUNTIME_DATA& GetRuntimeData() noexcept
+		{
+			return REL::RuntimeMember<RUNTIME_DATA>(this, 0x2B0, 0x2F8);
+		}
+
+		[[nodiscard]] const RUNTIME_DATA& GetRuntimeData() const noexcept
+		{
+			return REL::RuntimeMember<RUNTIME_DATA>(this, 0x2B0, 0x2F8);
+		}
+
+#ifndef ENABLE_SKYRIM_AE
+		RUNTIME_DATA_CONTENT
+#endif
 
 	protected:
 		bool Save_Impl(std::int32_t a_deviceID, std::uint32_t a_outputStats, const char* a_fileName);
 		bool Load_Impl(const char* a_fileName, std::int32_t a_deviceID, std::uint32_t a_outputStats, bool a_checkForMods);
 	};
+#ifndef ENABLE_SKYRIM_AE
 	static_assert(sizeof(BGSSaveLoadManager) == 0x3D0);
+#endif
 }
+#undef RUNTIME_DATA_CONTENT

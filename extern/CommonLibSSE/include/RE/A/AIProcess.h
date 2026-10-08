@@ -1,6 +1,7 @@
 #pragma once
 
 #include "RE/A/ActorPackage.h"
+#include "RE/A/ActorValues.h"
 #include "RE/B/BGSDefaultObjectManager.h"
 #include "RE/B/BSTArray.h"
 #include "RE/B/BSTList.h"
@@ -12,7 +13,6 @@ namespace RE
 	class Actor;
 	class bhkCharacterController;
 	class BipedAnim;
-	class HighProcess;
 	class NiAVObject;
 	class NiPoint3;
 	class TESForm;
@@ -41,10 +41,10 @@ namespace RE
 	{
 	public:
 		// members
-		bool          dirty;  // 0
-		std::uint8_t  pad1;   // 1
-		std::uint16_t pad2;   // 2
-		float         value;  // 4
+		float         value;    // 0
+		bool          invalid;  // 4
+		std::uint8_t  pad5;     // 5
+		std::uint16_t pad6;     // 6
 	};
 	static_assert(sizeof(CachedValueData) == 0x8);
 
@@ -80,20 +80,20 @@ namespace RE
 			kOwnerIsInCombatantFaction = 1 << 3
 		};
 
-		float                                         cachedRadius;              // 00
-		float                                         cachedWidth;               // 04
-		float                                         cachedLength;              // 08
-		float                                         cachedForwardLength;       // 0C
-		float                                         cachedDPS;                 // 10
-		float                                         cachedEyeLevel;            // 14
-		float                                         cachedWalkSpeed;           // 18
-		float                                         cachedRunSpeed;            // 1C
-		float                                         cachedJogSpeed;            // 20
-		float                                         cachedFastWalkSpeed;       // 24
-		stl::enumeration<BooleanValue, std::uint32_t> booleanValues;             // 28
-		stl::enumeration<Flags, std::uint32_t>        flags;                     // 2C
-		BSTArray<CachedValueData>                     actorValueCache;           // 30
-		BSTArray<CachedValueData>                     permanentActorValueCache;  // 48
+		float                                         cachedRadius;         // 00
+		float                                         cachedWidth;          // 04
+		float                                         cachedLength;         // 08
+		float                                         cachedForwardLength;  // 0C
+		float                                         cachedDPS;            // 10
+		float                                         cachedEyeLevel;       // 14
+		float                                         cachedWalkSpeed;      // 18
+		float                                         cachedRunSpeed;       // 1C
+		float                                         cachedJogSpeed;       // 20
+		float                                         cachedFastWalkSpeed;  // 24
+		stl::enumeration<BooleanValue, std::uint32_t> booleanValues;        // 28
+		stl::enumeration<Flags, std::uint32_t>        flags;                // 2C
+		BSTArray<CachedValueData>                     actorValueCache;      // 30
+		BSTArray<CachedValueData>                     maxActorValueCache;   // 48
 	};
 	static_assert(sizeof(CachedValues) == 0x60);
 
@@ -134,6 +134,13 @@ namespace RE
 		};
 		using Hand = Hands::Hand;
 
+		struct EquippedObject
+		{
+			TESForm*      object;  // 00
+			BGSEquipSlot* slot;    // 08
+		};
+		static_assert(sizeof(EquippedObject) == 0x10);
+
 		struct Data0B8
 		{
 		public:
@@ -161,6 +168,7 @@ namespace RE
 		[[nodiscard]] bool      GetIsSummonedCreature() const noexcept;
 		NiAVObject*             GetMagicNode(const BSTSmartPointer<BipedAnim>& a_biped) const;
 		ObjectRefHandle         GetOccupiedFurniture() const;
+		float                   GetRegenDelay(ActorValue a_actorvalue) const;
 		TESPackage*             GetRunningPackage() const;
 		Actor*                  GetUserData() const;
 		float                   GetVoiceRecoveryTime() const;
@@ -181,6 +189,7 @@ namespace RE
 		bool                    SetupSpecialIdle(Actor* a_actor, DEFAULT_OBJECT a_action, TESIdleForm* a_idle, bool a_arg5, bool a_arg6, TESObjectREFR* a_target);
 		void                    StopCurrentIdle(Actor* a_actor, bool a_forceIdleStop);
 		void                    Update3DModel(Actor* a_actor);
+		void                    UpdateRegenDelay(ActorValue a_actorValue, float a_regenDelay);
 
 		// members
 		MiddleLowProcessData*                           middleLow;                      // 000
@@ -200,7 +209,7 @@ namespace RE
 		float                                           deathTime;                      // 094
 		float                                           trackedDamage;                  // 098
 		std::uint32_t                                   pad09C;                         // 09C
-		BSTArray<TESForm*>                              forms;                          // 0A0
+		BSTArray<EquippedObject>                        equippedForms;                  // 0A0
 		Data0B8                                         unk0B8;                         // 0B8
 		TESForm*                                        equippedObjects[Hand::kTotal];  // 0F0
 		std::uint64_t                                   unk100;                         // 100

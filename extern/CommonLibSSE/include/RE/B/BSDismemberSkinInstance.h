@@ -8,7 +8,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_BSDismemberSkinInstance;
-		inline static constexpr auto Ni_RTTI = NiRTTI_BSDismemberSkinInstance;
+		inline static auto           Ni_RTTI = NiRTTI_BSDismemberSkinInstance;
 
 		struct Data
 		{
@@ -19,6 +19,21 @@ namespace RE
 			std::uint16_t slot;             // 2 - https://wiki.nexusmods.com/index.php/Skyrim_bodyparts_number
 		};
 		static_assert(sizeof(Data) == 0x4);
+
+		struct RUNTIME_DATA
+		{
+#define RUNTIME_DATA_CONTENT              \
+	std::int32_t  numPartitions; /* 00 */ \
+	std::uint32_t pad8C;         /* 04 */ \
+	Data*         partitions;    /* 08 */ \
+	bool          unk98;         /* 10 */ \
+	std::uint8_t  pad99;         /* 11 */ \
+	std::uint16_t pad9A;         /* 12 */ \
+	std::uint32_t pad9C;         /* 14 */
+
+			RUNTIME_DATA_CONTENT
+		};
+		static_assert(sizeof(RUNTIME_DATA) == 0x18);
 
 		~BSDismemberSkinInstance() override;  // 00
 
@@ -39,14 +54,25 @@ namespace RE
 			return func(this, a_slot, a_enable);
 		}
 
+		[[nodiscard]] inline RUNTIME_DATA& GetRuntimeData() noexcept
+		{
+			return REL::RelocateMember<RUNTIME_DATA>(this, 0x88, 0x68);
+		}
+
+		[[nodiscard]] inline const RUNTIME_DATA& GetRuntimeData() const noexcept
+		{
+			return REL::RelocateMember<RUNTIME_DATA>(this, 0x88, 0x68);
+		}
+
 		// members
-		std::int32_t  numPartitions;  // 88
-		std::uint32_t pad8C;          // 8C
-		Data*         partitions;     // 90
-		bool          unk98;          // 98
-		std::uint8_t  pad99;          // 99
-		std::uint16_t pad9A;          // 9A
-		std::uint32_t pad9C;          // 9C
+#ifndef SKYRIM_CROSS_VR
+		RUNTIME_DATA_CONTENT  // 88, 68
+#endif
 	};
+#ifndef ENABLE_SKYRIM_VR
 	static_assert(sizeof(BSDismemberSkinInstance) == 0xA0);
+#elif !defined(ENABLE_SKYRIM_AE) && !defined(ENABLE_SKYRIM_SE)
+	static_assert(sizeof(BSDismemberSkinInstance) == 0x80);
+#endif
 }
+#undef RUNTIME_DATA_CONTENT

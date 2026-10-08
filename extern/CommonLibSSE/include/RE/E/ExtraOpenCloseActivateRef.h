@@ -10,12 +10,12 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraOpenCloseActivateRef;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kOpenCloseActivateRef;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kOpenCloseActivateRef;
 
-		virtual ~ExtraOpenCloseActivateRef();  // 00
+		~ExtraOpenCloseActivateRef() override;  // 00
 
 		// override (BSExtraData)
-		virtual ExtraDataType GetType() const override;  // 01 - { return kOpenCloseActivateRef; }
+		ExtraDataType GetType() const override;  // 01 - { return kOpenCloseActivateRef; }
 
 		// members
 		ObjectRefHandle activateRef;  // 10

@@ -12,7 +12,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraMissingLinkedRefIDs;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kMissingLinkedRefIDs;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kMissingLinkedRefIDs;
 
 		struct Entry
 		{
@@ -52,10 +52,10 @@ namespace RE
 		};
 		static_assert(sizeof(Array) == 0x18);
 
-		virtual ~ExtraMissingLinkedRefIDs();  // 00
+		~ExtraMissingLinkedRefIDs() override;  // 00
 
 		// override (BSExtraData)
-		virtual ExtraDataType GetType() const override;  // 01 - { return kMissingLinkedRefIDs; }
+		ExtraDataType GetType() const override;  // 01 - { return kMissingLinkedRefIDs; }
 
 		TESObjectREFR* GetLinkedRef(BGSKeyword* a_keyword);
 

@@ -12,7 +12,7 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraAnimGraphManager;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kAnimGraphManager;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kAnimGraphManager;
 
 		~ExtraAnimGraphManager() override;  // 00
 

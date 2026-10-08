@@ -10,13 +10,13 @@ namespace RE
 	{
 	public:
 		inline static constexpr auto RTTI = RTTI_ExtraForcedLandingMarker;
-		inline static constexpr auto EXTRADATATYPE = ExtraDataType::kForcedLandingMarker;
+		inline static auto           EXTRADATATYPE = ExtraDataType::kForcedLandingMarker;
 
-		virtual ~ExtraForcedLandingMarker();  // 00
+		~ExtraForcedLandingMarker() override;  // 00
 
 		// override (BSExtraData)
-		virtual ExtraDataType GetType() const override;                             // 01 - { return kForcedLandingMarker; }
-		virtual bool          IsNotEqual(const BSExtraData* a_rhs) const override;  // 02 - { return landingMarker != a_rhs->landingMarker; }
+		ExtraDataType GetType() const override;                             // 01 - { return kForcedLandingMarker; }
+		bool          IsNotEqual(const BSExtraData* a_rhs) const override;  // 02 - { return landingMarker != a_rhs->landingMarker; }
 
 		// members
 		ObjectRefHandle landingMarker;  // 10

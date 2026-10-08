@@ -1,11 +1,12 @@
 {
-  "name": "commonlibsse-v2-template",
-  "version-string": "1.0.0",
-  "description": "MIT-licensed SKSE plugin template with Address Library V2/V5 and Skyrim 1.7.99 support.",
+  "name": "commonlibsse-ng-template",
+  "version-string": "2.0.0",
+  "description": "MIT-licensed SKSE plugin template on CommonLibSSE NG: one DLL for SE 1.5.97 and AE 1.6/1.7, Address Library V5. boost-stl-interfaces and rsm-binary-io are only needed for the VR variant (CommonLibVR).",
   "homepage": "https://github.com/Zzyxz/CommonLibSSE-NG",
   "license": "MIT",
   "dependencies": [
     "boost-stl-interfaces",
+    "rapidcsv",
     "rsm-binary-io",
     "spdlog"
   ],

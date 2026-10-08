@@ -20,14 +20,14 @@ namespace RE
 		public:
 			inline static constexpr auto RTTI = RTTI_SkyrimScript____AttachAshPileFunctor;
 
-			virtual ~AttachAshPileFunctor();  // 00
+			~AttachAshPileFunctor() override;  // 00
 
 			// override (DelayFunctor)
-			virtual BSScript::Variable operator()() override;                                                              // 01
-			virtual bool               IsLatent() const override;                                                          // 02 - { return false; }
-			virtual bool               SaveImpl(BSStorage& a_storage) const override;                                      // 04
-			virtual FunctorType        GetType() const override;                                                           // 05 - { return 14; }
-			virtual bool               LoadImpl(const BSStorage& a_storage, std::uint32_t a_arg2, bool& a_arg3) override;  // 06
+			RE::BSScript::Variable operator()() override;                                                              // 01
+			bool                   IsLatent() const override;                                                          // 02 - { return false; }
+			bool                   SaveImpl(BSStorage& a_storage) const override;                                      // 04
+			FunctorType            GetType() const override;                                                           // 05 - { return 14; }
+			bool                   LoadImpl(const BSStorage& a_storage, std::uint32_t a_arg2, bool& a_arg3) override;  // 06
 
 			// members
 			ActorHandle                                targetActor;  // 10

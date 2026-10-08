@@ -227,6 +227,11 @@ To skyrim_cast(From* a_from)
 {
 	REL::Relocation<void*> from{ RE::detail::remove_cvpr_t<From>::RTTI };
 	REL::Relocation<void*> to{ RE::detail::remove_cvpr_t<To>::RTTI };
+
+	if (!from.get() || !to.get()) {
+		return nullptr;
+	}
+
 	return static_cast<To>(
 		RE::RTDynamicCast(
 			const_cast<void*>(

@@ -1,10 +1,9 @@
 #pragma once
 
-#include <filesystem>
-#include <fstream>
-#include <limits>
+#include "REL/ID.h"
+#include "REL/Module.h"
 
-#include "REL/AddressLibraryV5.h"
+#include "SKSE/Trampoline.h"
 
 #define REL_MAKE_MEMBER_FUNCTION_POD_TYPE_HELPER_IMPL(a_nopropQual, a_propQual, ...)              \
 	template <                                                                                    \
@@ -15,7 +14,7 @@
 	{                                                                                             \
 		using type = R(__VA_ARGS__ Cls*, Args...) a_propQual;                                     \
 	};                                                                                            \
-                                                                                                  \
+																								  \
 	template <                                                                                    \
 		class R,                                                                                  \
 		class Cls,                                                                                \
@@ -43,7 +42,7 @@
 	{                                                                                                 \
 		using type = R&(__VA_ARGS__ Cls*, void*, Args...)a_propQual;                                  \
 	};                                                                                                \
-                                                                                                      \
+																									  \
 	template <                                                                                        \
 		class R,                                                                                      \
 		class Cls,                                                                                    \
@@ -66,48 +65,7 @@ namespace REL
 {
 	namespace detail
 	{
-		class memory_map
-		{
-		public:
-			memory_map() noexcept = default;
-			memory_map(const memory_map&) = delete;
-
-			memory_map(memory_map&& a_rhs) noexcept :
-				_mapping(a_rhs._mapping),
-				_view(a_rhs._view)
-			{
-				a_rhs._mapping = nullptr;
-				a_rhs._view = nullptr;
-			}
-
-			~memory_map() { close(); }
-
-			memory_map& operator=(const memory_map&) = delete;
-
-			memory_map& operator=(memory_map&& a_rhs) noexcept
-			{
-				if (this != std::addressof(a_rhs)) {
-					_mapping = a_rhs._mapping;
-					a_rhs._mapping = nullptr;
-
-					_view = a_rhs._view;
-					a_rhs._view = nullptr;
-				}
-				return *this;
-			}
-
-			[[nodiscard]] void* data() noexcept { return _view; }
-
-			bool open(stl::zwstring a_name, std::size_t a_size);
-			bool create(stl::zwstring a_name, std::size_t a_size);
-			void close();
-
-		private:
-			void* _mapping{ nullptr };
-			void* _view{ nullptr };
-		};
-
-		template <class>
+		template<class>
 		struct member_function_pod_type;
 
 		REL_MAKE_MEMBER_FUNCTION_POD_TYPE();
@@ -115,10 +73,10 @@ namespace REL
 		REL_MAKE_MEMBER_FUNCTION_POD_TYPE(volatile);
 		REL_MAKE_MEMBER_FUNCTION_POD_TYPE(const volatile);
 
-		template <class F>
+		template<class F>
 		using member_function_pod_type_t = typename member_function_pod_type<F>::type;
 
-		template <class>
+		template<class>
 		struct member_function_non_pod_type;
 
 		REL_MAKE_MEMBER_FUNCTION_NON_POD_TYPE();
@@ -126,12 +84,12 @@ namespace REL
 		REL_MAKE_MEMBER_FUNCTION_NON_POD_TYPE(volatile);
 		REL_MAKE_MEMBER_FUNCTION_NON_POD_TYPE(const volatile);
 
-		template <class F>
+		template<class F>
 		using member_function_non_pod_type_t = typename member_function_non_pod_type<F>::type;
 
 		// https://docs.microsoft.com/en-us/cpp/build/x64-calling-convention
 
-		template <class T>
+		template<class T>
 		struct meets_length_req :
 			std::disjunction<
 				std::bool_constant<sizeof(T) == 1>,
@@ -140,7 +98,7 @@ namespace REL
 				std::bool_constant<sizeof(T) == 8>>
 		{};
 
-		template <class T>
+		template<class T>
 		struct meets_function_req :
 			std::conjunction<
 				std::is_trivially_constructible<T>,
@@ -150,25 +108,20 @@ namespace REL
 					std::is_polymorphic<T>>>
 		{};
 
-		template <class T>
-		struct meets_member_req :
-			std::is_standard_layout<T>
-		{};
+		template<class T>
+		struct meets_member_req : std::is_standard_layout<T> {};
 
-		template <class T, class = void>
-		struct is_x64_pod :
-			std::true_type
-		{};
+		template<class T, class = void>
+		struct is_x64_pod : std::true_type {};
 
-		template <class T>
+		template<class T>
 		struct is_x64_pod<
 			T,
 			std::enable_if_t<
 				std::is_union_v<T>>> :
-			std::false_type
-		{};
+			std::false_type {};
 
-		template <class T>
+		template<class T>
 		struct is_x64_pod<
 			T,
 			std::enable_if_t<
@@ -176,19 +129,17 @@ namespace REL
 			std::conjunction<
 				meets_length_req<T>,
 				meets_function_req<T>,
-				meets_member_req<T>>
-		{};
+				meets_member_req<T>> {};
 
-		template <class T>
+		template<class T>
 		inline constexpr bool is_x64_pod_v = is_x64_pod<T>::value;
 
-		template <
+		template<
 			class F,
 			class First,
 			class... Rest>
-		decltype(auto) invoke_member_function_non_pod(F&& a_func, First&& a_first, Rest&&... a_rest)  //
-			noexcept(std::is_nothrow_invocable_v<F, First, Rest...>)
-		{
+		decltype(auto) invoke_member_function_non_pod(F&& a_func, First&& a_first, Rest&& ... a_rest)  //
+		noexcept(std::is_nothrow_invocable_v<F, First, Rest...>) {
 			using result_t = std::invoke_result_t<F, First, Rest...>;
 			std::aligned_storage_t<sizeof(result_t), alignof(result_t)> result;
 
@@ -214,15 +165,15 @@ namespace REL
 	inline constexpr std::uint8_t RET = 0xC3;
 	inline constexpr std::uint8_t INT3 = 0xCC;
 
-	template <class F, class... Args>
-	std::invoke_result_t<F, Args...> invoke(F&& a_func, Args&&... a_args)  //
-		noexcept(std::is_nothrow_invocable_v<F, Args...>)                  //
-		requires(std::invocable<F, Args...>)
+	template<class F, class... Args>
+	std::invoke_result_t<F, Args...> invoke(F&& a_func, Args&&... a_args)
+	noexcept(std::is_nothrow_invocable_v<F, Args...>)
+	requires(std::invocable<F, Args...>)
 	{
 		if constexpr (std::is_member_function_pointer_v<std::decay_t<F>>) {
 			if constexpr (detail::is_x64_pod_v<std::invoke_result_t<F, Args...>>) {  // member functions == free functions in x64
 				using func_t = detail::member_function_pod_type_t<std::decay_t<F>>;
-				auto func = stl::unrestricted_cast<func_t*>(std::forward<F>(a_func));
+				auto func = stl::unrestricted_cast<func_t *>(std::forward<F>(a_func));
 				return func(std::forward<Args>(a_args)...);
 			} else {  // shift args to insert result
 				return detail::invoke_member_function_non_pod(std::forward<F>(a_func), std::forward<Args>(a_args)...);
@@ -232,820 +183,23 @@ namespace REL
 		}
 	}
 
-	inline void safe_write(std::uintptr_t a_dst, const void* a_src, std::size_t a_count)
-	{
-		std::uint32_t old{ 0 };
-		auto          success =
-			WinAPI::VirtualProtect(
-				reinterpret_cast<void*>(a_dst),
-				a_count,
-				(WinAPI::PAGE_EXECUTE_READWRITE),
-				std::addressof(old));
-		if (success != 0) {
-			std::memcpy(reinterpret_cast<void*>(a_dst), a_src, a_count);
-			success =
-				WinAPI::VirtualProtect(
-					reinterpret_cast<void*>(a_dst),
-					a_count,
-					old,
-					std::addressof(old));
-		}
+	void safe_write(std::uintptr_t a_dst, const void* a_src, std::size_t a_count);
 
-		assert(success != 0);
-	}
-
-	template <std::integral T>
+	template<std::integral T>
 	void safe_write(std::uintptr_t a_dst, const T& a_data)
 	{
 		safe_write(a_dst, std::addressof(a_data), sizeof(T));
 	}
 
-	template <class T>
+	template<class T>
 	void safe_write(std::uintptr_t a_dst, std::span<T> a_data)
 	{
 		safe_write(a_dst, a_data.data(), a_data.size_bytes());
 	}
 
-	inline void safe_fill(std::uintptr_t a_dst, std::uint8_t a_value, std::size_t a_count)
-	{
-		std::uint32_t old{ 0 };
-		auto          success =
-			WinAPI::VirtualProtect(
-				reinterpret_cast<void*>(a_dst),
-				a_count,
-				(WinAPI::PAGE_EXECUTE_READWRITE),
-				std::addressof(old));
-		if (success != 0) {
-			std::fill_n(reinterpret_cast<std::uint8_t*>(a_dst), a_count, a_value);
-			success =
-				WinAPI::VirtualProtect(
-					reinterpret_cast<void*>(a_dst),
-					a_count,
-					old,
-					std::addressof(old));
-		}
+	void safe_fill(std::uintptr_t a_dst, std::uint8_t a_value, std::size_t a_count);
 
-		assert(success != 0);
-	}
-
-	class Version
-	{
-	public:
-		using value_type = std::uint16_t;
-		using reference = value_type&;
-		using const_reference = const value_type&;
-
-		constexpr Version() noexcept = default;
-
-		explicit constexpr Version(std::array<value_type, 4> a_version) noexcept :
-			_impl(a_version)
-		{}
-
-		constexpr Version(value_type a_v1, value_type a_v2 = 0, value_type a_v3 = 0, value_type a_v4 = 0) noexcept :
-			_impl{ a_v1, a_v2, a_v3, a_v4 }
-		{}
-
-		[[nodiscard]] constexpr reference       operator[](std::size_t a_idx) noexcept { return _impl[a_idx]; }
-		[[nodiscard]] constexpr const_reference operator[](std::size_t a_idx) const noexcept { return _impl[a_idx]; }
-
-		[[nodiscard]] constexpr decltype(auto) begin() const noexcept { return _impl.begin(); }
-		[[nodiscard]] constexpr decltype(auto) cbegin() const noexcept { return _impl.cbegin(); }
-		[[nodiscard]] constexpr decltype(auto) end() const noexcept { return _impl.end(); }
-		[[nodiscard]] constexpr decltype(auto) cend() const noexcept { return _impl.cend(); }
-
-		[[nodiscard]] std::strong_ordering constexpr compare(const Version& a_rhs) const noexcept
-		{
-			for (std::size_t i = 0; i < _impl.size(); ++i) {
-				if ((*this)[i] != a_rhs[i]) {
-					return (*this)[i] < a_rhs[i] ? std::strong_ordering::less : std::strong_ordering::greater;
-				}
-			}
-			return std::strong_ordering::equal;
-		}
-
-		[[nodiscard]] constexpr std::uint32_t pack() const noexcept
-		{
-			return static_cast<std::uint32_t>(
-				(_impl[0] & 0x0FF) << 24u |
-				(_impl[1] & 0x0FF) << 16u |
-				(_impl[2] & 0xFFF) << 4u |
-				(_impl[3] & 0x00F) << 0u);
-		}
-
-		[[nodiscard]] std::string string() const
-		{
-			std::string result;
-			for (auto&& ver : _impl) {
-				result += std::to_string(ver);
-				result += '-';
-			}
-			result.pop_back();
-			return result;
-		}
-
-		[[nodiscard]] std::wstring wstring() const
-		{
-			std::wstring result;
-			for (auto&& ver : _impl) {
-				result += std::to_wstring(ver);
-				result += L'-';
-			}
-			result.pop_back();
-			return result;
-		}
-
-	private:
-		std::array<value_type, 4> _impl{ 0, 0, 0, 0 };
-	};
-
-	[[nodiscard]] constexpr bool                 operator==(const Version& a_lhs, const Version& a_rhs) noexcept { return a_lhs.compare(a_rhs) == 0; }
-	[[nodiscard]] constexpr std::strong_ordering operator<=>(const Version& a_lhs, const Version& a_rhs) noexcept { return a_lhs.compare(a_rhs); }
-
-	[[nodiscard]] inline std::optional<Version> get_file_version(stl::zwstring a_filename)
-	{
-		std::uint32_t     dummy;
-		std::vector<char> buf(WinAPI::GetFileVersionInfoSize(a_filename.data(), std::addressof(dummy)));
-		if (buf.empty()) {
-			return std::nullopt;
-		}
-
-		if (!WinAPI::GetFileVersionInfo(a_filename.data(), 0, static_cast<std::uint32_t>(buf.size()), buf.data())) {
-			return std::nullopt;
-		}
-
-		void*         verBuf{ nullptr };
-		std::uint32_t verLen{ 0 };
-		if (!WinAPI::VerQueryValue(buf.data(), L"\\StringFileInfo\\040904B0\\ProductVersion", std::addressof(verBuf), std::addressof(verLen))) {
-			return std::nullopt;
-		}
-
-		Version             version;
-		std::wistringstream ss(
-			std::wstring(static_cast<const wchar_t*>(verBuf), verLen));
-		std::wstring token;
-		for (std::size_t i = 0; i < 4 && std::getline(ss, token, L'.'); ++i) {
-			version[i] = static_cast<std::uint16_t>(std::stoi(token));
-		}
-
-		return version;
-	}
-
-	class Segment
-	{
-	public:
-		enum Name : std::size_t
-		{
-			textx,
-			idata,
-			rdata,
-			data,
-			pdata,
-			tls,
-			textw,
-			gfids,
-			total
-		};
-
-		Segment() noexcept = default;
-
-		Segment(std::uintptr_t a_proxyBase, std::uintptr_t a_address, std::uintptr_t a_size) noexcept :
-			_proxyBase(a_proxyBase),
-			_address(a_address),
-			_size(a_size)
-		{}
-
-		[[nodiscard]] std::uintptr_t address() const noexcept { return _address; }
-		[[nodiscard]] std::size_t    offset() const noexcept { return address() - _proxyBase; }
-		[[nodiscard]] std::size_t    size() const noexcept { return _size; }
-
-		[[nodiscard]] void* pointer() const noexcept { return reinterpret_cast<void*>(address()); }
-
-		template <class T>
-		[[nodiscard]] T* pointer() const noexcept
-		{
-			return static_cast<T*>(pointer());
-		}
-
-	private:
-		std::uintptr_t _proxyBase{ 0 };
-		std::uintptr_t _address{ 0 };
-		std::size_t    _size{ 0 };
-	};
-
-	class Module
-	{
-	public:
-		enum class Runtime
-		{
-			kSE,
-			kAE
-		};
-
-		[[nodiscard]] static Module& get()
-		{
-			static Module singleton;
-			return singleton;
-		}
-
-		[[nodiscard]] static constexpr Runtime runtime_for(Version a_version) noexcept
-		{
-			return a_version[0] > 1 || (a_version[0] == 1 && a_version[1] >= 6) ?
-			           Runtime::kAE :
-			           Runtime::kSE;
-		}
-
-		[[nodiscard]] static constexpr std::uint32_t legacy_address_library_format_for(Version a_version) noexcept
-		{
-			return runtime_for(a_version) == Runtime::kAE ? 2u : 1u;
-		}
-
-		[[nodiscard]] static constexpr std::string_view address_library_prefix_for(Version a_version) noexcept
-		{
-			return runtime_for(a_version) == Runtime::kAE ? "versionlib-" : "version-";
-		}
-
-		[[nodiscard]] std::uintptr_t base() const noexcept { return _base; }
-		[[nodiscard]] stl::zwstring  filename() const noexcept { return _filename; }
-		[[nodiscard]] Version        version() const noexcept { return _version; }
-		[[nodiscard]] Runtime        runtime() const noexcept { return runtime_for(_version); }
-		[[nodiscard]] bool           is_se() const noexcept { return runtime() == Runtime::kSE; }
-		[[nodiscard]] bool           is_ae() const noexcept { return runtime() == Runtime::kAE; }
-
-		[[nodiscard]] Segment segment(Segment::Name a_segment) const noexcept { return _segments[a_segment]; }
-
-		[[nodiscard]] void* pointer() const noexcept { return reinterpret_cast<void*>(base()); }
-
-		template <class T>
-		[[nodiscard]] T* pointer() const noexcept
-		{
-			return static_cast<T*>(pointer());
-		}
-
-	private:
-		Module()
-		{
-			const auto getFilename = [&]() {
-				return WinAPI::GetEnvironmentVariable(
-					ENVIRONMENT.data(),
-					_filename.data(),
-					static_cast<std::uint32_t>(_filename.size()));
-			};
-
-			_filename.resize(getFilename());
-			if (const auto result = getFilename();
-				result != _filename.size() - 1 ||
-				result == 0) {
-				_filename = L"SkyrimSE.exe"sv;
-			}
-
-			load();
-		}
-
-		Module(const Module&) = delete;
-		Module(Module&&) = delete;
-
-		~Module() noexcept = default;
-
-		Module& operator=(const Module&) = delete;
-		Module& operator=(Module&&) = delete;
-
-		void load()
-		{
-			auto handle = WinAPI::GetModuleHandle(_filename.c_str());
-			if (handle == nullptr) {
-				stl::report_and_fail(
-					fmt::format(
-						"Failed to obtain module handle for: \"{0}\".\n"
-						"You have likely renamed the executable to something unexpected. "
-						"Renaming the executable back to \"{0}\" may resolve the issue."sv,
-						stl::utf16_to_utf8(_filename).value_or("<unicode conversion error>"s)));
-			}
-			_base = reinterpret_cast<std::uintptr_t>(handle);
-
-			load_version();
-			load_segments();
-		}
-
-		void load_segments();
-
-		void load_version()
-		{
-			const auto version = get_file_version(_filename);
-			if (version) {
-				_version = *version;
-			} else {
-				stl::report_and_fail(
-					fmt::format(
-						"Failed to obtain file version info for: {}\n"
-						"Please contact the author of this script extender plugin for further assistance."sv,
-						stl::utf16_to_utf8(_filename).value_or("<unicode conversion error>"s)));
-			}
-		}
-
-		static constexpr std::array SEGMENTS{
-			std::make_pair(".text"sv, WinAPI::IMAGE_SCN_MEM_EXECUTE),
-			std::make_pair(".idata"sv, static_cast<std::uint32_t>(0)),
-			std::make_pair(".rdata"sv, static_cast<std::uint32_t>(0)),
-			std::make_pair(".data"sv, static_cast<std::uint32_t>(0)),
-			std::make_pair(".pdata"sv, static_cast<std::uint32_t>(0)),
-			std::make_pair(".tls"sv, static_cast<std::uint32_t>(0)),
-			std::make_pair(".text"sv, WinAPI::IMAGE_SCN_MEM_WRITE),
-			std::make_pair(".gfids"sv, static_cast<std::uint32_t>(0))
-		};
-
-		static constexpr auto ENVIRONMENT = L"SKSE_RUNTIME"sv;
-
-		std::wstring                        _filename;
-		std::array<Segment, Segment::total> _segments;
-		Version                             _version;
-		std::uintptr_t                      _base{ 0 };
-	};
-
-	class IDDatabase
-	{
-	private:
-		struct mapping_t
-		{
-			std::uint64_t id;
-			std::uint64_t offset;
-		};
-
-	public:
-		class Offset2ID
-		{
-		public:
-			using value_type = mapping_t;
-			using container_type = std::vector<value_type>;
-			using size_type = typename container_type::size_type;
-			using const_iterator = typename container_type::const_iterator;
-			using const_reverse_iterator = typename container_type::const_reverse_iterator;
-
-			template <class ExecutionPolicy>
-			explicit Offset2ID(ExecutionPolicy&& a_policy)  //
-				requires(std::is_execution_policy_v<std::decay_t<ExecutionPolicy>>)
-			{
-				const std::span<const mapping_t> id2offset = IDDatabase::get()._id2offset;
-				_offset2id.reserve(id2offset.size());
-				for (const auto& mapping : id2offset) {
-					if (mapping.offset != 0) {
-						_offset2id.push_back(mapping);
-					}
-				}
-				std::sort(
-					a_policy,
-					_offset2id.begin(),
-					_offset2id.end(),
-					[](auto&& a_lhs, auto&& a_rhs) {
-						return a_lhs.offset < a_rhs.offset;
-					});
-			}
-
-			Offset2ID() :
-				Offset2ID(std::execution::sequenced_policy{})
-			{}
-
-			[[nodiscard]] std::uint64_t operator()(std::size_t a_offset) const
-			{
-				const mapping_t elem{ 0, a_offset };
-				const auto      it = std::lower_bound(
-                    _offset2id.begin(),
-                    _offset2id.end(),
-                    elem,
-                    [](auto&& a_lhs, auto&& a_rhs) {
-                        return a_lhs.offset < a_rhs.offset;
-                    });
-				if (it == _offset2id.end()) {
-					stl::report_and_fail(
-						fmt::format(
-							"Failed to find the offset within the database: 0x{:08X}"sv,
-							a_offset));
-				}
-
-				return it->id;
-			}
-
-			[[nodiscard]] const_iterator begin() const noexcept { return _offset2id.begin(); }
-			[[nodiscard]] const_iterator cbegin() const noexcept { return _offset2id.cbegin(); }
-
-			[[nodiscard]] const_iterator end() const noexcept { return _offset2id.end(); }
-			[[nodiscard]] const_iterator cend() const noexcept { return _offset2id.cend(); }
-
-			[[nodiscard]] const_reverse_iterator rbegin() const noexcept { return _offset2id.rbegin(); }
-			[[nodiscard]] const_reverse_iterator crbegin() const noexcept { return _offset2id.crbegin(); }
-
-			[[nodiscard]] const_reverse_iterator rend() const noexcept { return _offset2id.rend(); }
-			[[nodiscard]] const_reverse_iterator crend() const noexcept { return _offset2id.crend(); }
-
-			[[nodiscard]] size_type size() const noexcept { return _offset2id.size(); }
-
-		private:
-			container_type _offset2id;
-		};
-
-		[[nodiscard]] static IDDatabase& get()
-		{
-			static IDDatabase singleton;
-			return singleton;
-		}
-
-		[[nodiscard]] inline std::size_t id2offset(std::uint64_t a_id) const
-		{
-			mapping_t  elem{ a_id, 0 };
-			const auto it = std::lower_bound(
-				_id2offset.begin(),
-				_id2offset.end(),
-				elem,
-				[](auto&& a_lhs, auto&& a_rhs) {
-					return a_lhs.id < a_rhs.id;
-				});
-			if (it == _id2offset.end() || it->id != a_id) {
-				stl::report_and_fail(
-					fmt::format(
-						"Failed to find the id within the address library: {}\n"
-						"This means this script extender plugin is incompatible with the address "
-						"library for this version of the game, and thus does not support it."sv,
-						a_id));
-			}
-
-			return static_cast<std::size_t>(it->offset);
-		}
-
-		// Like id2offset, but returns nothing instead of failing for an unknown id.
-		[[nodiscard]] std::optional<std::size_t> try_id2offset(std::uint64_t a_id) const noexcept
-		{
-			mapping_t  elem{ a_id, 0 };
-			const auto it = std::lower_bound(
-				_id2offset.begin(),
-				_id2offset.end(),
-				elem,
-				[](auto&& a_lhs, auto&& a_rhs) {
-					return a_lhs.id < a_rhs.id;
-				});
-			if (it == _id2offset.end() || it->id != a_id) {
-				return std::nullopt;
-			}
-
-			return static_cast<std::size_t>(it->offset);
-		}
-
-	private:
-		friend Offset2ID;
-
-		class header_t
-		{
-		public:
-			void read(binary_io::file_istream& a_in)
-			{
-				const auto [format] = a_in.read<std::uint32_t>();
-				_format = format;
-
-				if (format == detail::address_library_v5::format) {
-					const auto header = detail::address_library_v5::read_header(a_in, format);
-					for (std::size_t i = 0; i < header.version.size(); ++i) {
-						_version[i] = static_cast<std::uint16_t>(header.version[i]);
-					}
-					_pointerSize = header.pointer_size;
-					_addressCount = header.address_count;
-					return;
-				}
-
-				const auto expectedFormat = Module::legacy_address_library_format_for(Module::get().version());
-				if (format != expectedFormat) {
-					stl::report_and_fail(
-						fmt::format(
-							"Unsupported address library format: {}\n"
-							"This means this script extender plugin is incompatible with the address "
-							"library available for this version of the game, and thus does not "
-							"support it."sv,
-							format));
-				}
-
-				const auto [major, minor, patch, revision] =
-					a_in.read<std::int32_t, std::int32_t, std::int32_t, std::int32_t>();
-				_version[0] = static_cast<std::uint16_t>(major);
-				_version[1] = static_cast<std::uint16_t>(minor);
-				_version[2] = static_cast<std::uint16_t>(patch);
-				_version[3] = static_cast<std::uint16_t>(revision);
-
-				const auto [nameLen] = a_in.read<std::int32_t>();
-				a_in.seek_relative(nameLen);
-
-				std::int32_t pointerSize{};
-				std::int32_t addressCount{};
-				a_in.read(pointerSize, addressCount);
-				_pointerSize = static_cast<std::uint64_t>(pointerSize);
-				_addressCount = static_cast<std::uint64_t>(addressCount);
-			}
-
-			[[nodiscard]] std::size_t   address_count() const noexcept { return static_cast<std::size_t>(_addressCount); }
-			[[nodiscard]] std::uint32_t format() const noexcept { return _format; }
-			[[nodiscard]] std::uint64_t pointer_size() const noexcept { return _pointerSize; }
-			[[nodiscard]] Version       version() const noexcept { return _version; }
-
-		private:
-			Version       _version;
-			std::uint32_t _format{ 0 };
-			std::uint64_t _pointerSize{ 0 };
-			std::uint64_t _addressCount{ 0 };
-		};
-
-		IDDatabase() { load(); }
-
-		IDDatabase(const IDDatabase&) = delete;
-		IDDatabase(IDDatabase&&) = delete;
-
-		~IDDatabase() = default;
-
-		IDDatabase& operator=(const IDDatabase&) = delete;
-		IDDatabase& operator=(IDDatabase&&) = delete;
-
-		void load()
-		{
-			const auto version = Module::get().version();
-			const auto libraryPrefix = Module::address_library_prefix_for(version);
-			const auto filename =
-				stl::utf8_to_utf16(
-					fmt::format(
-						"Data/SKSE/Plugins/{}{}.bin"sv,
-						libraryPrefix,
-						version.string()))
-					.value_or(L"<unknown filename>"s);
-
-			// Prefer the normal Address Library path. Both legacy V2 and V5 files
-			// are supported there.
-			if (std::filesystem::exists(filename)) {
-				load_file(filename, version);
-				return;
-			}
-
-			const auto v2Filename =
-				stl::utf8_to_utf16(
-					fmt::format(
-						"Data/SKSE/Plugins/AddressLibV2/{}{}.bin"sv,
-						libraryPrefix,
-						version.string()))
-					.value_or(L"<unknown filename>"s);
-
-			if (std::filesystem::exists(v2Filename)) {
-				load_file(v2Filename, version);
-				return;
-			}
-
-			load_file(filename, version);
-		}
-
-		void load_file(stl::zwstring a_filename, Version a_version)
-		{
-			try {
-				binary_io::file_istream in(a_filename);
-				header_t                header;
-				header.read(in);
-				if (header.version() != a_version) {
-					stl::report_and_fail("version mismatch"sv);
-				}
-				if (header.format() == detail::address_library_v5::format &&
-					std::filesystem::file_size(a_filename) !=
-						detail::address_library_v5::expected_size(static_cast<std::uint32_t>(header.address_count()))) {
-					stl::report_and_fail("invalid Address Library V5 file size"sv);
-				}
-
-				auto mapname = header.format() == detail::address_library_v5::format ?
-				                   L"CommonLibSSEOffsets-v5-"s :
-				                   L"CommonLibSSEOffsets-v2-"s;
-				mapname += a_version.wstring();
-				const auto byteSize = static_cast<std::size_t>(header.address_count()) * sizeof(mapping_t);
-				if (_mmap.open(mapname, byteSize)) {
-					_id2offset = { static_cast<mapping_t*>(_mmap.data()), header.address_count() };
-				} else if (_mmap.create(mapname, byteSize)) {
-					_id2offset = { static_cast<mapping_t*>(_mmap.data()), header.address_count() };
-					unpack_file(in, header);
-					std::sort(
-						_id2offset.begin(),
-						_id2offset.end(),
-						[](auto&& a_lhs, auto&& a_rhs) {
-							return a_lhs.id < a_rhs.id;
-						});
-				} else {
-					stl::report_and_fail("failed to create shared mapping"sv);
-				}
-			} catch (const std::system_error&) {
-				stl::report_and_fail(
-					fmt::format(
-						"Failed to locate an appropriate address library with the path: {}\n"
-						"This means you are missing the address library for this specific version of "
-						"the game. Please continue to the mod page for address library to download "
-						"an appropriate version. If one is not available, then it is likely that "
-						"address library has not yet added support for this version of the game."sv,
-						stl::utf16_to_utf8(a_filename).value_or("<unknown filename>"s)));
-			}
-		}
-
-		void unpack_file(binary_io::file_istream& a_in, header_t a_header)
-		{
-			if (a_header.format() == detail::address_library_v5::format) {
-				detail::address_library_v5::read_entries(
-					a_in,
-					static_cast<std::uint32_t>(a_header.address_count()),
-					[this](std::uint64_t a_id, std::uint64_t a_rva) {
-						_id2offset[static_cast<std::size_t>(a_id)] = a_rva != 0 ?
-						                                                    mapping_t{ a_id, a_rva } :
-						                                                    mapping_t{ std::numeric_limits<std::uint64_t>::max(), 0 };
-					});
-				return;
-			}
-
-			std::uint8_t  type = 0;
-			std::uint64_t id = 0;
-			std::uint64_t offset = 0;
-			std::uint64_t prevID = 0;
-			std::uint64_t prevOffset = 0;
-			for (auto& mapping : _id2offset) {
-				a_in.read(type);
-				const auto lo = static_cast<std::uint8_t>(type & 0xF);
-				const auto hi = static_cast<std::uint8_t>(type >> 4);
-
-				switch (lo) {
-				case 0:
-					a_in.read(id);
-					break;
-				case 1:
-					id = prevID + 1;
-					break;
-				case 2:
-					id = prevID + std::get<0>(a_in.read<std::uint8_t>());
-					break;
-				case 3:
-					id = prevID - std::get<0>(a_in.read<std::uint8_t>());
-					break;
-				case 4:
-					id = prevID + std::get<0>(a_in.read<std::uint16_t>());
-					break;
-				case 5:
-					id = prevID - std::get<0>(a_in.read<std::uint16_t>());
-					break;
-				case 6:
-					std::tie(id) = a_in.read<std::uint16_t>();
-					break;
-				case 7:
-					std::tie(id) = a_in.read<std::uint32_t>();
-					break;
-				default:
-					stl::report_and_fail("unhandled type"sv);
-				}
-
-				const std::uint64_t tmp = (hi & 8) != 0 ? (prevOffset / a_header.pointer_size()) : prevOffset;
-
-				switch (hi & 7) {
-				case 0:
-					a_in.read(offset);
-					break;
-				case 1:
-					offset = tmp + 1;
-					break;
-				case 2:
-					offset = tmp + std::get<0>(a_in.read<std::uint8_t>());
-					break;
-				case 3:
-					offset = tmp - std::get<0>(a_in.read<std::uint8_t>());
-					break;
-				case 4:
-					offset = tmp + std::get<0>(a_in.read<std::uint16_t>());
-					break;
-				case 5:
-					offset = tmp - std::get<0>(a_in.read<std::uint16_t>());
-					break;
-				case 6:
-					std::tie(offset) = a_in.read<std::uint16_t>();
-					break;
-				case 7:
-					std::tie(offset) = a_in.read<std::uint32_t>();
-					break;
-				default:
-					stl::report_and_fail("unhandled type"sv);
-				}
-
-				if ((hi & 8) != 0) {
-					offset *= a_header.pointer_size();
-				}
-
-				mapping = { id, offset };
-
-				prevOffset = offset;
-				prevID = id;
-			}
-		}
-
-		detail::memory_map   _mmap;
-		std::span<mapping_t> _id2offset;
-	};
-
-	class Offset
-	{
-	public:
-		constexpr Offset() noexcept = default;
-
-		explicit constexpr Offset(std::size_t a_offset) noexcept :
-			_offset(a_offset)
-		{}
-
-		constexpr Offset& operator=(std::size_t a_offset) noexcept
-		{
-			_offset = a_offset;
-			return *this;
-		}
-
-		[[nodiscard]] std::uintptr_t        address() const { return base() + offset(); }
-		[[nodiscard]] constexpr std::size_t offset() const noexcept { return _offset; }
-
-	private:
-		[[nodiscard]] static std::uintptr_t base() { return Module::get().base(); }
-
-		std::size_t _offset{ 0 };
-	};
-
-	class ID
-	{
-	public:
-		constexpr ID() noexcept = default;
-
-		explicit constexpr ID(std::uint64_t a_id) noexcept :
-			_id(a_id)
-		{}
-
-		constexpr ID& operator=(std::uint64_t a_id) noexcept
-		{
-			_id = a_id;
-			return *this;
-		}
-
-		[[nodiscard]] std::uintptr_t          address() const { return base() + offset(); }
-		[[nodiscard]] constexpr std::uint64_t id() const noexcept { return _id; }
-		[[nodiscard]] std::size_t             offset() const { return IDDatabase::get().id2offset(_id); }
-
-	private:
-		[[nodiscard]] static std::uintptr_t base() { return Module::get().base(); }
-
-		std::uint64_t _id{ 0 };
-	};
-
-	class RelocationID
-	{
-	public:
-		constexpr RelocationID() noexcept = default;
-
-		constexpr RelocationID(std::uint64_t a_seID, std::uint64_t a_aeID) noexcept :
-			_seID(a_seID),
-			_aeID(a_aeID)
-		{}
-
-		[[nodiscard]] constexpr std::uint64_t id_for(Version a_version) const noexcept
-		{
-			return Module::runtime_for(a_version) == Module::Runtime::kAE ? _aeID : _seID;
-		}
-
-		[[nodiscard]] std::uint64_t id() const noexcept
-		{
-			return id_for(Module::get().version());
-		}
-
-		[[nodiscard]] std::uintptr_t address() const
-		{
-			return ID(id()).address();
-		}
-
-	private:
-		std::uint64_t _seID{ 0 };
-		std::uint64_t _aeID{ 0 };
-	};
-
-	using VariantID = RelocationID;
-
-	template <class T, class U>
-	[[nodiscard]] auto Relocate(T&& a_se, U&& a_ae)
-		-> std::common_type_t<std::remove_cvref_t<T>, std::remove_cvref_t<U>>
-	{
-		using result_t = std::common_type_t<std::remove_cvref_t<T>, std::remove_cvref_t<U>>;
-		return Module::get().is_ae() ?
-		           static_cast<result_t>(std::forward<U>(a_ae)) :
-			           static_cast<result_t>(std::forward<T>(a_se));
-	}
-
-	template <class T, class U>
-	[[nodiscard]] T& RuntimeMember(U* a_object, std::ptrdiff_t a_seOffset, std::ptrdiff_t a_aeOffset) noexcept
-		requires(!std::is_const_v<U>)
-	{
-		const auto address = reinterpret_cast<std::uintptr_t>(a_object) + Relocate(a_seOffset, a_aeOffset);
-		return *reinterpret_cast<T*>(address);
-	}
-
-	template <class T, class U>
-	[[nodiscard]] const T& RuntimeMember(const U* a_object, std::ptrdiff_t a_seOffset, std::ptrdiff_t a_aeOffset) noexcept
-	{
-		const auto address = reinterpret_cast<std::uintptr_t>(a_object) + Relocate(a_seOffset, a_aeOffset);
-		return *reinterpret_cast<const T*>(address);
-	}
-
-	template <class T>
+	template <class T = std::uintptr_t>
 	class Relocation
 	{
 	public:
@@ -1057,37 +211,79 @@ namespace REL
 
 		constexpr Relocation() noexcept = default;
 
-		explicit constexpr Relocation(std::uintptr_t a_address) noexcept :
-			_impl{ a_address }
+		explicit constexpr Relocation(std::uintptr_t a_address) noexcept:
+			_impl{a_address}
 		{}
 
 		explicit Relocation(Offset a_offset) :
-			_impl{ a_offset.address() }
+			_impl{a_offset.address()}
+		{}
+
+		explicit Relocation(VariantOffset a_offset) :
+			_impl{a_offset.address()}
 		{}
 
 		explicit Relocation(ID a_id) :
-			_impl{ a_id.address() }
-		{}
-
-		explicit Relocation(RelocationID a_id) :
-			_impl{ a_id.address() }
+			_impl{a_id.address()}
 		{}
 
 		explicit Relocation(ID a_id, std::ptrdiff_t a_offset) :
-			_impl{ a_id.address() + a_offset }
+			_impl{a_id.address() + a_offset}
+		{}
+
+		explicit Relocation(ID a_id, Offset a_offset) :
+			_impl{a_id.address() + a_offset.offset()}
+		{}
+
+		explicit Relocation(ID a_id, VariantOffset a_offset) :
+			_impl{a_id.address() + a_offset.offset()}
+		{}
+
+		explicit Relocation(RelocationID a_id) :
+			_impl{a_id.address()}
 		{}
 
 		explicit Relocation(RelocationID a_id, std::ptrdiff_t a_offset) :
-			_impl{ a_id.address() + a_offset }
+			_impl{a_id.address() + a_offset}
 		{}
 
-		constexpr Relocation& operator=(std::uintptr_t a_address) noexcept
+		explicit Relocation(RelocationID a_id, Offset a_offset) :
+			_impl{a_id.address() + a_offset.offset()}
+		{}
+
+		explicit Relocation(RelocationID a_id, VariantOffset a_offset) :
+			_impl{a_id.address() + a_offset.offset()}
+		{}
+
+		explicit Relocation(VariantID a_id) :
+			_impl{a_id.address()}
+		{}
+
+		explicit Relocation(VariantID a_id, std::ptrdiff_t a_offset) :
+			_impl{a_id.address() + a_offset}
+		{}
+
+		explicit Relocation(VariantID a_id, Offset a_offset) :
+			_impl{a_id.address() + a_offset.offset()}
+		{}
+
+		explicit Relocation(VariantID a_id, VariantOffset a_offset) :
+			_impl{a_id.address() + a_offset.offset()}
+		{}
+
+		constexpr Relocation &operator=(std::uintptr_t a_address) noexcept
 		{
 			_impl = a_address;
 			return *this;
 		}
 
 		Relocation& operator=(Offset a_offset)
+		{
+			_impl = a_offset.address();
+			return *this;
+		}
+
+		Relocation& operator=(VariantOffset a_offset)
 		{
 			_impl = a_offset.address();
 			return *this;
@@ -1105,418 +301,377 @@ namespace REL
 			return *this;
 		}
 
-		template <class U = value_type>
-		[[nodiscard]] decltype(auto) operator*() const noexcept  //
-			requires(std::is_pointer_v<U>)
+		Relocation& operator=(VariantID a_id)
+		{
+			_impl = a_id.address();
+			return *this;
+		}
+
+		template<class U = value_type>
+		[[nodiscard]] decltype(auto) operator*() const noexcept
+		requires(std::is_pointer_v<U>)
 		{
 			return *get();
 		}
 
-		template <class U = value_type>
-		[[nodiscard]] auto operator->() const noexcept  //
-			requires(std::is_pointer_v<U>)
+		template<class U = value_type>
+		[[nodiscard]] auto operator->() const noexcept
+		requires(std::is_pointer_v<U>)
 		{
 			return get();
 		}
 
-		template <class... Args>
-		std::invoke_result_t<const value_type&, Args...> operator()(Args&&... a_args) const  //
-			noexcept(std::is_nothrow_invocable_v<const value_type&, Args...>)                //
-			requires(std::invocable<const value_type&, Args...>)
+		template<class... Args>
+		std::invoke_result_t<const value_type &, Args...> operator()(Args &&... a_args) const
+		noexcept(std::is_nothrow_invocable_v<const value_type &, Args...>)
+		requires(std::invocable<const value_type &, Args...>)
 		{
 			return REL::invoke(get(), std::forward<Args>(a_args)...);
 		}
 
 		[[nodiscard]] constexpr std::uintptr_t address() const noexcept { return _impl; }
-		[[nodiscard]] std::size_t              offset() const { return _impl - base(); }
 
-		[[nodiscard]] value_type get() const  //
-			noexcept(std::is_nothrow_copy_constructible_v<value_type>)
+		[[nodiscard]] std::size_t offset() const { return _impl - base(); }
+
+		[[nodiscard]] value_type get() const
+		noexcept(std::is_nothrow_copy_constructible_v<value_type>)
 		{
 			assert(_impl != 0);
 			return stl::unrestricted_cast<value_type>(_impl);
 		}
 
-		template <class U = value_type>
-		std::uintptr_t write_vfunc(std::size_t a_idx, std::uintptr_t a_newFunc)  //
-			requires(std::same_as<U, std::uintptr_t>)
+		template <std::integral U>
+		void write(const U& a_data)
+		requires(std::same_as<value_type, std::uintptr_t>)
 		{
-			const auto addr = address() + (sizeof(void*) * a_idx);
-			const auto result = *reinterpret_cast<std::uintptr_t*>(addr);
+			safe_write(address(), std::addressof(a_data), sizeof(T));
+		}
+
+		template <class U>
+		void write(const std::span<U> a_data)
+		requires(std::same_as<value_type, std::uintptr_t>)
+		{
+			safe_write(address(), a_data.data(), a_data.size_bytes());
+		}
+
+		template <std::size_t N>
+		std::uintptr_t write_branch(const std::uintptr_t a_dst)
+		requires(std::same_as<value_type, std::uintptr_t>)
+		{
+			return SKSE::GetTrampoline().write_branch<N>(address(), a_dst);
+		}
+
+		template <std::size_t N, class F>
+		std::uintptr_t write_branch(const F a_dst)
+		requires(std::same_as<value_type, std::uintptr_t>)
+		{
+			return SKSE::GetTrampoline().write_branch<N>(address(), stl::unrestricted_cast<std::uintptr_t>(a_dst));
+		}
+
+		template <std::size_t N>
+		std::uintptr_t write_call(const std::uintptr_t a_dst)
+		requires(std::same_as<value_type, std::uintptr_t>)
+		{
+			return SKSE::GetTrampoline().write_call<N>(address(), a_dst);
+		}
+
+		template <std::size_t N, class F>
+		std::uintptr_t write_call(const F a_dst)
+		requires(std::same_as<value_type, std::uintptr_t>)
+		{
+			return SKSE::GetTrampoline().write_call<N>(address(), stl::unrestricted_cast<std::uintptr_t>(a_dst));
+		}
+
+		void write_fill(const std::uint8_t a_value, const std::size_t a_count)
+		requires(std::same_as<value_type, std::uintptr_t>)
+		{
+			safe_fill(address(), a_value, a_count);
+		}
+
+		template <class U = value_type>
+		std::uintptr_t write_vfunc(const std::size_t a_idx, const std::uintptr_t a_newFunc)
+		requires(std::same_as<U, std::uintptr_t>)
+		{
+			const auto addr = address() + (sizeof(void *) * a_idx);
+			const auto result = *reinterpret_cast<std::uintptr_t *>(addr);
 			safe_write(addr, a_newFunc);
 			return result;
 		}
 
-		template <class F>
-		std::uintptr_t write_vfunc(std::size_t a_idx, F a_newFunc)  //
-			requires(std::same_as<value_type, std::uintptr_t>)
+		template<class F>
+		std::uintptr_t write_vfunc(std::size_t a_idx, F a_newFunc)
+		requires(std::same_as<value_type, std::uintptr_t>)
 		{
 			return write_vfunc(a_idx, stl::unrestricted_cast<std::uintptr_t>(a_newFunc));
 		}
 
-	private :
+	private:
 		// clang-format off
 		[[nodiscard]] static std::uintptr_t base() { return Module::get().base(); }
 		// clang-format on
 
-		std::uintptr_t _impl{ 0 };
+		std::uintptr_t _impl{0};
 	};
 
-	// Semantic callsites: find a hook site by what it does instead of by a fixed byte offset.
-	//
-	// The owner function is located through the Address Library, its code range comes from the
-	// game's .pdata (including split parts linked through chained unwind info), and only that range
-	// is searched. Address Library IDs are the same on every AE version, so one owner/target pair
-	// covers all AE releases; RelocationID adds the SE pair.
-	//
-	// The search is a byte scan for E8/E9 rel32 whose destination is the target; it does not decode
-	// instructions. Prefer the UNIQUE form, which fails on more than one hit, and check the found
-	// call in IDA: a match does not prove that registers and arguments fit the hook.
-
-	// An owner or target: an ID valid on the running game, or an SE/AE RelocationID.
-	class CallsiteID
+	/**
+	 * Return the correct value of two choices between SE/VR, and AE versions of Skyrim.
+	 *
+	 * <p>
+	 * This is commonly used to select between relative offsets within a function, when hooking a call instruction.
+	 * In such cases the function can be identified by its Address Library ID, but the offset within the function
+	 * may vary between Skyrim versions. This selection is made at runtime, allowing the same compiled code to run
+	 * in multiple versions of Skyrim.
+	 * </p>
+	 *
+	 * @tparam T the type of value to return.
+	 * @param a_seAndVR the value to use for SE and VR.
+	 * @param a_ae the value to use for AE.
+	 * @return Either <code>a_seAndVR</code> if the current runtime is Skyrim SE or VR, or <code>a_ae</code> if the runtime is AE.
+	 */
+	template<class T>
+	[[nodiscard]] SKYRIM_ADDR T Relocate(
+		[[maybe_unused]] T&& a_seAndVR,
+		[[maybe_unused]] T&& a_ae) noexcept
 	{
-	public:
-		constexpr CallsiteID(ID a_id) noexcept :
-			_id(a_id.id(), a_id.id())
-		{}
+#ifndef ENABLE_SKYRIM_AE
+		return a_seAndVR;
+#elif !defined(ENABLE_SKYRIM_SE) && !defined(ENABLE_SKYRIM_VR)
+		return a_ae;
+#else
+		return Module::IsAE() ? a_ae : a_seAndVR;
+#endif
+	}
 
-		constexpr CallsiteID(RelocationID a_id) noexcept :
-			_id(a_id)
-		{}
-
-		[[nodiscard]] std::uint64_t id() const noexcept { return _id.id(); }
-
-	private:
-		RelocationID _id;
-	};
-
-	enum class AutoCallsiteBranch : std::uint8_t
+	/**
+	 * Return the correct value of two choices between SE, AE, and VR versions of Skyrim.
+	 *
+	 * <p>
+	 * This is commonly used to select between relative offsets within a function, when hooking a call instruction.
+	 * In such cases the function can be identified by its Address Library ID, but the offset within the function
+	 * may vary between Skyrim versions. This selection is made at runtime, allowing the same compiled code to run
+	 * in multiple versions of Skyrim.
+	 * </p>
+	 *
+	 * @tparam T the type of value to return.
+	 * @param a_se the value to use for SE.
+	 * @param a_ae the value to use for AE.
+	 * @param a_vr the value to use for VR.
+	 * @return Either <code>a_se</code> if the current runtime is Skyrim SE, or <code>a_ae</code> if the runtime is AE, or
+	 * <code>a_vr</code> if running Skyrim VR.
+	 */
+	template<class T>
+	[[nodiscard]] SKYRIM_REL T Relocate(
+		[[maybe_unused]] T a_se,
+		[[maybe_unused]] T a_ae,
+		[[maybe_unused]] T a_vr) noexcept
 	{
-		kCall,
-		kJump,
-		kCallOrJump
-	};
-
-	enum class CallsiteStatus : std::uint8_t
-	{
-		kResolved,
-		kResolvedKnownOffset,
-		kNotFound,
-		kAmbiguous,
-		kUnknownID,
-		kNoFunctionRange,
-		kInvalidArgument
-	};
-
-	[[nodiscard]] std::string_view callsite_status_text(CallsiteStatus a_status) noexcept;
-
-	class AutoCallsite
-	{
-	public:
-		static constexpr std::uint16_t LAST = std::numeric_limits<std::uint16_t>::max() - 1;
-		static constexpr std::uint16_t UNIQUE = std::numeric_limits<std::uint16_t>::max();
-
-		explicit constexpr AutoCallsite(
-			CallsiteID         a_target,
-			AutoCallsiteBranch a_branch = AutoCallsiteBranch::kCall,
-			std::uint16_t      a_occurrence = UNIQUE) noexcept :
-			_target(a_target),
-			_branch(a_branch),
-			_occurrence(a_occurrence)
-		{}
-
-		// A known owner-relative offset for the listed game versions, for a call that another plugin may
-		// already have redirected. On a listed version it is used first, but only if the live instruction
-		// there is a call (jump for kJump) to the target or to code outside the game executable;
-		// otherwise the automatic search decides. Take the offsets from the unmodified executable.
-		//   REL::AUTO_CALLSITE(kTarget).or_offset(0x85, REL::Version{ 1, 6, 1170, 0 })
-		[[nodiscard]] constexpr AutoCallsite or_offset(
-			std::ptrdiff_t a_offset,
-			Version        a_version1,
-			Version        a_version2 = Version{},
-			Version        a_version3 = Version{},
-			Version        a_version4 = Version{}) const noexcept
-		{
-			auto copy = *this;
-			copy._knownOffset = a_offset;
-			copy._knownVersions = { a_version1, a_version2, a_version3, a_version4 };
-			return copy;
+#if !defined(ENABLE_SKYRIM_AE) && !defined(ENABLE_SKYRIM_VR)
+		return a_se;
+#elif !defined(ENABLE_SKYRIM_SE) && !defined(ENABLE_SKYRIM_VR)
+		return a_ae;
+#elif !defined(ENABLE_SKYRIM_AE) && !defined(ENABLE_SKYRIM_SE)
+		return a_vr;
+#else
+		switch (Module::get().GetRuntime()) {
+			case Module::Runtime::AE:
+				return a_ae;
+			case Module::Runtime::VR:
+				return a_vr;
+			default:
+				return a_se;
 		}
-
-		[[nodiscard]] constexpr const CallsiteID&  target() const noexcept { return _target; }
-		[[nodiscard]] constexpr AutoCallsiteBranch branch() const noexcept { return _branch; }
-		[[nodiscard]] constexpr std::uint16_t      occurrence() const noexcept { return _occurrence; }
-
-		[[nodiscard]] constexpr std::optional<std::ptrdiff_t> known_offset(const Version& a_version) const noexcept
-		{
-			if (_knownOffset) {
-				for (const auto& version : _knownVersions) {
-					if (version != Version{} && version == a_version) {
-						return _knownOffset;
-					}
-				}
-			}
-			return std::nullopt;
-		}
-
-	private:
-		CallsiteID                    _target;
-		AutoCallsiteBranch            _branch{ AutoCallsiteBranch::kCall };
-		std::uint16_t                 _occurrence{ UNIQUE };
-		std::optional<std::ptrdiff_t> _knownOffset;
-		std::array<Version, 4>        _knownVersions{};
-	};
-
-	// Exactly one call to the target (the default).
-	[[nodiscard]] constexpr AutoCallsite AUTO_CALLSITE(
-		CallsiteID         a_target,
-		AutoCallsiteBranch a_branch = AutoCallsiteBranch::kCall) noexcept
-	{
-		return AutoCallsite{ a_target, a_branch, AutoCallsite::UNIQUE };
+#endif
 	}
-
-	[[nodiscard]] constexpr AutoCallsite AUTO_CALLSITE_FIRST(
-		CallsiteID         a_target,
-		AutoCallsiteBranch a_branch = AutoCallsiteBranch::kCall) noexcept
-	{
-		return AutoCallsite{ a_target, a_branch, 0 };
-	}
-
-	[[nodiscard]] constexpr AutoCallsite AUTO_CALLSITE_LAST(
-		CallsiteID         a_target,
-		AutoCallsiteBranch a_branch = AutoCallsiteBranch::kCall) noexcept
-	{
-		return AutoCallsite{ a_target, a_branch, AutoCallsite::LAST };
-	}
-
-	// a_index is zero-based: AUTO_CALLSITE_NTH(kTarget, 1) is the second call in address order.
-	[[nodiscard]] constexpr AutoCallsite AUTO_CALLSITE_NTH(
-		CallsiteID         a_target,
-		std::uint16_t      a_index,
-		AutoCallsiteBranch a_branch = AutoCallsiteBranch::kCall) noexcept
-	{
-		return AutoCallsite{ a_target, a_branch, a_index };
-	}
-
-	struct CallsiteResult
-	{
-		std::vector<std::uintptr_t> addresses;  // absolute, ascending
-		std::vector<std::ptrdiff_t> offsets;    // relative to the owner start
-		CallsiteStatus              status{ CallsiteStatus::kInvalidArgument };
-
-		[[nodiscard]] explicit operator bool() const noexcept { return !addresses.empty(); }
-	};
-
-	struct CallsiteLookup
-	{
-		std::optional<std::uintptr_t> address;
-		std::ptrdiff_t                offset{ 0 };   // relative to the owner start
-		std::size_t                   matches{ 0 };  // hits of the automatic search
-		CallsiteStatus                status{ CallsiteStatus::kInvalidArgument };
-		std::string                   note;
-
-		[[nodiscard]] explicit operator bool() const noexcept { return address.has_value(); }
-	};
-
-	// Every direct call/jump from the owner to the target.
-	[[nodiscard]] CallsiteResult resolve_callsites(
-		CallsiteID         a_owner,
-		CallsiteID         a_target,
-		AutoCallsiteBranch a_branch = AutoCallsiteBranch::kCall);
-
-	// One callsite, without report_and_fail: on failure the address is empty and status/note say why.
-	//   const auto site = REL::try_resolve_callsite(kRenderFrame, REL::AUTO_CALLSITE(kDrawWorld));
-	//   if (!site) { logger::warn("feature off: {}", REL::callsite_status_text(site.status)); return; }
-	//   trampoline.write_call<5>(*site.address, Hook);
-	[[nodiscard]] CallsiteLookup try_resolve_callsite(CallsiteID a_owner, const AutoCallsite& a_callsite);
-
-	// A byte pattern ("C7 44 24 20 00 00 40 00", "FF 15 ?? ?? ?? ??") inside the owner's code range.
-	// Exactly one hit is required; none or several leave the address empty.
-	[[nodiscard]] CallsiteLookup try_resolve_pattern(CallsiteID a_owner, std::string_view a_pattern);
 
 	namespace detail
 	{
-		namespace characters
+		template<class T>
+		struct RelocateVirtualHelper {};
+
+		template<class Ret, class This>
+		struct RelocateVirtualHelper<Ret(This*)>
 		{
-			[[nodiscard]] constexpr bool hexadecimal(char a_ch) noexcept
-			{
-				return ('0' <= a_ch && a_ch <= '9') ||
-				       ('A' <= a_ch && a_ch <= 'F') ||
-				       ('a' <= a_ch && a_ch <= 'f');
-			}
-
-			[[nodiscard]] constexpr bool space(char a_ch) noexcept
-			{
-				return a_ch == ' ';
-			}
-
-			[[nodiscard]] constexpr bool wildcard(char a_ch) noexcept
-			{
-				return a_ch == '?';
-			}
-		}
-
-		namespace rules
-		{
-			namespace detail
-			{
-				[[nodiscard]] consteval std::byte hexacharacters_to_hexadecimal(char a_hi, char a_lo) noexcept
-				{
-					constexpr auto lut = []() noexcept {
-						std::array<std::uint8_t, std::numeric_limits<unsigned char>::max() + 1> a = {};
-
-						const auto iterate = [&](std::uint8_t a_iFirst, unsigned char a_cFirst, unsigned char a_cLast) noexcept {
-							for (; a_cFirst <= a_cLast; ++a_cFirst, ++a_iFirst) {
-								a[a_cFirst] = a_iFirst;
-							}
-						};
-
-						iterate(0, '0', '9');
-						iterate(0xA, 'A', 'F');
-						iterate(0xa, 'a', 'f');
-
-						return a;
-					}();
-
-					return static_cast<std::byte>(
-						lut[static_cast<unsigned char>(a_hi)] * 0x10u +
-						lut[static_cast<unsigned char>(a_lo)]);
-				}
-			}
-
-			template <char HI, char LO>
-			class Hexadecimal
-			{
-			public:
-				[[nodiscard]] static constexpr bool match(std::byte a_byte) noexcept
-				{
-					constexpr auto expected = detail::hexacharacters_to_hexadecimal(HI, LO);
-					return a_byte == expected;
-				}
-			};
-
-			static_assert(Hexadecimal<'5', '7'>::match(std::byte{ 0x57 }));
-			static_assert(Hexadecimal<'6', '5'>::match(std::byte{ 0x65 }));
-			static_assert(Hexadecimal<'B', 'D'>::match(std::byte{ 0xBD }));
-			static_assert(Hexadecimal<'1', 'C'>::match(std::byte{ 0x1C }));
-			static_assert(Hexadecimal<'F', '2'>::match(std::byte{ 0xF2 }));
-			static_assert(Hexadecimal<'9', 'f'>::match(std::byte{ 0x9f }));
-
-			static_assert(!Hexadecimal<'D', '4'>::match(std::byte{ 0xF8 }));
-			static_assert(!Hexadecimal<'6', '7'>::match(std::byte{ 0xAA }));
-			static_assert(!Hexadecimal<'7', '8'>::match(std::byte{ 0xE3 }));
-			static_assert(!Hexadecimal<'6', 'E'>::match(std::byte{ 0x61 }));
-
-			class Wildcard
-			{
-			public:
-				[[nodiscard]] static constexpr bool match(std::byte) noexcept
-				{
-					return true;
-				}
-			};
-
-			static_assert(Wildcard::match(std::byte{ 0xB9 }));
-			static_assert(Wildcard::match(std::byte{ 0x96 }));
-			static_assert(Wildcard::match(std::byte{ 0x35 }));
-			static_assert(Wildcard::match(std::byte{ 0xE4 }));
-
-			template <char, char>
-			void rule_for() noexcept;
-
-			template <char C1, char C2>
-			Hexadecimal<C1, C2> rule_for() noexcept
-				requires(characters::hexadecimal(C1) && characters::hexadecimal(C2));
-
-			template <char C1, char C2>
-			Wildcard rule_for() noexcept
-				requires(characters::wildcard(C1) && characters::wildcard(C2));
-		}
-
-		template <class... Rules>
-		class PatternMatcher
-		{
-		public:
-			static_assert(sizeof...(Rules) >= 1, "must provide at least 1 rule for the pattern matcher");
-
-			[[nodiscard]] constexpr bool match(std::span<const std::byte, sizeof...(Rules)> a_bytes) const noexcept
-			{
-				std::size_t i = 0;
-				return (Rules::match(a_bytes[i++]) && ...);
-			}
-
-			[[nodiscard]] bool match(std::uintptr_t a_address) const noexcept
-			{
-				return this->match(*reinterpret_cast<const std::byte(*)[sizeof...(Rules)]>(a_address));
-			}
-
-			void match_or_fail(std::uintptr_t a_address, std::source_location a_loc = std::source_location::current()) const noexcept
-			{
-				if (!this->match(a_address)) {
-					const auto version = Module::get().version();
-					stl::report_and_fail(
-						fmt::format(
-							"A pattern has failed to match.\n"
-							"This means the plugin is incompatible with the current version of the game ({}.{}.{}). "
-							"Head to the mod page of this plugin to see if an update is available."sv,
-							version[0],
-							version[1],
-							version[2]),
-						a_loc);
-				}
-			}
+			using this_type = This;
+			using return_type = Ret;
+			using function_type = Ret(This*);
 		};
 
-		void consteval_error(const char* a_error);
-
-		template <stl::nttp::string S, class... Rules>
-		[[nodiscard]] constexpr auto do_make_pattern() noexcept
+		template<class Ret, class This, class... Args>
+		struct RelocateVirtualHelper<Ret(This*, Args...)>
 		{
-			if constexpr (S.length() == 0) {
-				return PatternMatcher<Rules...>();
-			} else if constexpr (S.length() == 1) {
-				constexpr char c = S[0];
-				if constexpr (characters::hexadecimal(c) || characters::wildcard(c)) {
-					consteval_error("the given pattern has an unpaired rule (rules are required to be written in pairs of 2)");
-				} else {
-					consteval_error("the given pattern has trailing characters at the end (which is not allowed)");
-				}
-			} else {
-				using rule_t = decltype(rules::rule_for<S[0], S[1]>());
-				if constexpr (std::same_as<rule_t, void>) {
-					consteval_error("the given pattern failed to match any known rules");
-				} else {
-					if constexpr (S.length() <= 3) {
-						return do_make_pattern<S.template substr<2>(), Rules..., rule_t>();
-					} else if constexpr (characters::space(S[2])) {
-						return do_make_pattern<S.template substr<3>(), Rules..., rule_t>();
-					} else {
-						consteval_error("a space character is required to split byte patterns");
-					}
-				}
-			}
-		}
+			using this_type = This;
+			using return_type = Ret;
+			using function_type = Ret(This *, Args...);
+		};
 
-		template <class... Bytes>
-		[[nodiscard]] consteval auto make_byte_array(Bytes... a_bytes) noexcept
-			-> std::array<std::byte, sizeof...(Bytes)>
+		template<class Ret, class This>
+		struct RelocateVirtualHelper<Ret(This::*)()>
 		{
-			static_assert((std::integral<Bytes> && ...), "all bytes must be an integral type");
-			return { static_cast<std::byte>(a_bytes)... };
-		}
+			using this_type = This;
+			using return_type = Ret;
+			using function_type = Ret(This *);
+		};
+
+		template<class Ret, class This, class... Args>
+		struct RelocateVirtualHelper<Ret(This::*)(Args...)>
+		{
+			using this_type = This;
+			using return_type = Ret;
+			using function_type = Ret(This *, Args...);
+		};
+
+		template<class Ret, class This>
+		struct RelocateVirtualHelper<Ret(This::*)() const>
+		{
+			using this_type = const This;
+			using return_type = Ret;
+			using function_type = Ret(const This *);
+		};
+
+		template<class Ret, class This, class... Args>
+		struct RelocateVirtualHelper<Ret(This::*)(Args...) const>
+		{
+			using this_type = const This;
+			using return_type = Ret;
+			using function_type = Ret(const This*, Args...);
+		};
 	}
 
-	template <stl::nttp::string S>
-	[[nodiscard]] constexpr auto make_pattern() noexcept
+	/**
+	 * Invokes a virtual function in a cross-platform way where the vtable structure is variant across AE/SE and VR runtimes.
+	 *
+	 * <p>
+	 * Some classes in Skyrim VR add new virtual functions in the middle of the vtable structure, which makes it ABI-incompatible with AE/SE.
+	 * A naive virtual function call, therefore, cannot work across all runtimes without the plugin being recompiled specifically for VR.
+	 * This call works with types which have variant vtables to allow a non-virtual function definition to be created in the virtual function's
+	 * place, and to have that call dynamically lookup the correct function based on the vtable structure expected in the current runtime.
+	 * </p>
+	 *
+	 * @tparam Fn the type of the function being called.
+	 * @tparam Args the types of the arguments being passed.
+	 * @param a_seAndAEVtableOffset the offset from the <code>this</code> pointer to the vtable with the virtual function in SE/AE.
+	 * @param a_vrVtableIndex the offset from the <code>this</code> pointer to the vtable with the virtual function in VR.
+	 * @param a_seAndAEVtableIndex the index of the function in the class' vtable in SE and AE.
+	 * @param a_vrVtableIndex the index of the function in the class' vtable in VR.
+	 * @param a_self the <code>this</code> argument for the call.
+	 * @param a_args the remaining arguments for the call, if any.
+	 * @return The result of the function call.
+	 */
+	template<class Fn, class... Args>
+	[[nodiscard]] inline typename detail::RelocateVirtualHelper<Fn>::return_type RelocateVirtual(
+		[[maybe_unused]] std::ptrdiff_t a_seAndAEVtableOffset,
+		[[maybe_unused]] std::ptrdiff_t a_vrVtableOffset,
+		[[maybe_unused]] std::ptrdiff_t a_seAndAEVtableIndex,
+		[[maybe_unused]] std::ptrdiff_t a_vrVtableIndex,
+		typename detail::RelocateVirtualHelper<Fn>::this_type* a_self, Args &&... a_args)
 	{
-		return detail::do_make_pattern<S>();
+		return (*reinterpret_cast<typename detail::RelocateVirtualHelper<Fn>::function_type**>(
+				*reinterpret_cast<const uintptr_t *>(reinterpret_cast<uintptr_t>(a_self) +
+													 #ifndef ENABLE_SKYRIM_VR
+													 a_seAndAEVtableOffset) +
+			a_seAndAEVtableIndex
+													 #elif !defined(ENABLE_SKYRIM_AE) && !defined(ENABLE_SKYRIM_SE)
+													 a_vrVtableOffset) +
+			a_vrVtableIndex
+													 #else
+													 (Module::IsVR() ? a_vrVtableOffset : a_seAndAEVtableOffset)) +
+				(Module::IsVR() ? a_vrVtableIndex : a_seAndAEVtableIndex)
+				#endif
+				* sizeof(uintptr_t)))(a_self, std::forward<Args>(a_args)...);
 	}
 
-	static_assert(make_pattern<"40 10 F2 ??">().match(
-		detail::make_byte_array(0x40, 0x10, 0xF2, 0x41)));
-	static_assert(make_pattern<"B8 D0 ?? ?? D4 6E">().match(
-		detail::make_byte_array(0xB8, 0xD0, 0x35, 0x2A, 0xD4, 0x6E)));
+	/**
+	 * Invokes a virtual function in a cross-platform way where the vtable structure is variant across AE/SE and VR runtimes.
+	 *
+	 * <p>
+	 * Some classes in Skyrim VR add new virtual functions in the middle of the vtable structure, which makes it ABI-incompatible with AE/SE.
+	 * A naive virtual function call, therefore, cannot work across all runtimes without the plugin being recompiled specifically for VR.
+	 * This call works with types which have variant vtables to allow a non-virtual function definition to be created in the virtual function's
+	 * place, and to have that call dynamically lookup the correct function based on the vtable structure expected in the current runtime.
+	 * </p>
+	 *
+	 * <p>
+	 * This call assumes the vtable to be used is the one at offset 0, i.e. it invokes a virtual function either on the first parent class
+	 * or the current class.
+	 * </p>
+	 *
+	 * @tparam Fn the type of the function being called.
+	 * @tparam Args the types of the arguments being passed.
+	 * @param a_seAndAEVtableIndex the index of the function in the class' vtable in SE and AE.
+	 * @param a_vrVtableIndex the index of the function in the class' vtable in VR.
+	 * @param a_self the <code>this</code> argument for the call.
+	 * @param a_args the remaining arguments for the call, if any.
+	 * @return The result of the function call.
+	 */
+	template<class Fn, class... Args>
+	[[nodiscard]] inline typename detail::RelocateVirtualHelper<Fn>::return_type RelocateVirtual(
+		std::ptrdiff_t a_seAndAEVtableIndex,
+		std::ptrdiff_t a_vrVtableIndex,
+		typename detail::RelocateVirtualHelper<Fn>::this_type* a_self, Args&&... a_args)
+	{
+		return RelocateVirtual<Fn, Args...>(0, 0, a_seAndAEVtableIndex, a_vrVtableIndex, a_self, std::forward<Args>(a_args)...);
+	}
+
+	/**
+	 * Gets a member variable in a cross-platform way, using runtime-specific memory offsets.
+	 *
+	 * <p>
+	 * This function handles the variant memory structures used in Skyrim VR as compared to versions of SE.
+	 * It allows a memory offset relative to the object's base address for SE (and AE) and a separate one for
+	 * VR. This simplifies the process of creating functions to get member variables that are at different
+	 * offsets in different runtimes from a single build.
+	 * </p>
+	 *
+	 * @tparam T the type of the member being accessed.
+	 * @tparam This the type of the target object that has the member.
+	 * @param a_self the target object that has the member.
+	 * @param a_seAndAE the memory offset of the member in Skyrim SE and AE.
+	 * @param a_vr the memory offset of the member in Skyrim VR.
+	 * @return A reference to the member.
+	 */
+	template<class T, class This>
+	[[nodiscard]] inline T& RelocateMember(This* a_self, std::ptrdiff_t a_seAndAE, std::ptrdiff_t a_vr)
+	{
+		return *reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(a_self) + Relocate(a_seAndAE, a_seAndAE, a_vr));
+	}
+
+	template<class T, class This>
+	[[nodiscard]] inline T& RelocateMember(This* a_self, std::ptrdiff_t offset)
+	{
+		return *reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(a_self) + offset);
+	}
+
+	template<class T, class This>
+	[[nodiscard]] inline T& RelocateMemberIf(bool condition, This* a_self, std::ptrdiff_t a, std::ptrdiff_t b)
+	{
+		return *reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(a_self) + (condition ? a : b));
+	}
+
+	template<class T, class This>
+	[[nodiscard]] inline T& RelocateMemberIfNewer(Version v, This* a_self, std::ptrdiff_t older, std::ptrdiff_t newer)
+	{
+		return *reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(a_self) +
+									 (REL::Module::get().version().compare(v) == std::strong_ordering::less ? older : newer));
+	}
+}
+
+namespace REL
+{
+	/**
+	 * Member access with the offset chosen for the running game: SE (1.5) or AE (1.6 and later).
+	 * Kept from the previous template; for SE/AE/VR use RelocateMember / Relocate.
+	 */
+	template <class T, class This>
+	[[nodiscard]] inline T& RuntimeMember(This* a_self, std::ptrdiff_t a_seOffset, std::ptrdiff_t a_aeOffset) noexcept
+	{
+		return *reinterpret_cast<T*>(reinterpret_cast<std::uintptr_t>(a_self) + (Module::IsAE() ? a_aeOffset : a_seOffset));
+	}
+
+	template <class T, class This>
+	[[nodiscard]] inline const T& RuntimeMember(const This* a_self, std::ptrdiff_t a_seOffset, std::ptrdiff_t a_aeOffset) noexcept
+	{
+		return *reinterpret_cast<const T*>(reinterpret_cast<std::uintptr_t>(a_self) + (Module::IsAE() ? a_aeOffset : a_seOffset));
+	}
 }
 
 #undef REL_MAKE_MEMBER_FUNCTION_NON_POD_TYPE

@@ -38,7 +38,7 @@ namespace RE
 			kIgnoresCrimes_Werewolf = 1 << 16
 		};
 
-		stl::enumeration<Flag, std::uint32_t> flags;  // 0
+		Flag flags;  // 0
 	};
 	static_assert(sizeof(FACTION_DATA) == 0x4);
 
