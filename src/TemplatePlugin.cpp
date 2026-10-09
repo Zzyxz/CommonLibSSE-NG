@@ -47,15 +47,16 @@ extern "C" __declspec(dllexport) bool SKSEAPI SKSEPlugin_Query(const SKSE::Query
 	if (a_skse->IsEditor()) {
 		return false;
 	}
-	// SE SKSE and SKSE VR call this; accept only the runtimes this build supports.
-	[[maybe_unused]] const auto runtime = a_skse->RuntimeVersion();
+	// SE SKSE and SKSE VR call this. Accept any version of the runtimes this build supports (SKSE VR reports
+	// 1.4.15.1, not 1.4.15.0); SKSEPlugin_Load then looks for the matching Address Library file.
+	[[maybe_unused]] const auto family = REL::Module::RuntimeFor(a_skse->RuntimeVersion());
 #ifdef ENABLE_SKYRIM_SE
-	if (runtime == SKSE::RUNTIME_SSE_1_5_97) {
+	if (family == REL::Module::Runtime::SE) {
 		return true;
 	}
 #endif
 #ifdef ENABLE_SKYRIM_VR
-	if (runtime == SKSE::RUNTIME_VR_1_4_15) {
+	if (family == REL::Module::Runtime::VR) {
 		return true;
 	}
 #endif
@@ -67,11 +68,9 @@ extern "C" __declspec(dllexport) bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadIn
 	initialize_log();
 
 	// Checked before SKSE::Init, which ends the game when the Address Library file is missing.
+	// FindAddressLibrary looks for the file named after the executable's version, the one Init loads.
 	const auto runtime = a_skse->RuntimeVersion();
-	const auto library = std::filesystem::path("Data/SKSE/Plugins") / REL::Module::AddressLibraryFileName(runtime);
-	const auto fallback = std::filesystem::path("Data/SKSE/Plugins/AddressLibV2") / REL::Module::AddressLibraryFileName(runtime);
-	std::error_code ec;
-	if (!std::filesystem::exists(library, ec) && !std::filesystem::exists(fallback, ec)) {
+	if (REL::Module::FindAddressLibrary().empty()) {
 		logger::warn("Address Library for SKSE Plugins is missing for {}; plugin inactive.", runtime.string());
 		return true;
 	}

@@ -274,7 +274,8 @@ namespace REL
 
 		/**
 		 * The Address Library file name for a game version, e.g. "versionlib-1-6-1170-0.bin" (AE) or
-		 * "version-1-5-97-0.bin" (SE). VR uses "version-....csv".
+		 * "version-1-5-97-0.bin" (SE). VR uses "version-1-4-15-0.csv": SKSE VR reports 1.4.15.1, the file
+		 * is named after the executable's version 1.4.15.0.
 		 */
 		[[nodiscard]] static std::string AddressLibraryFileName(const Version& a_version)
 		{
@@ -282,10 +283,34 @@ namespace REL
 			case Runtime::AE:
 				return std::format("versionlib-{}.bin", a_version.string());
 			case Runtime::VR:
-				return std::format("version-{}.csv", a_version.string());
+				return std::format("version-{}.csv", Version(a_version[0], a_version[1], a_version[2], 0).string());
 			default:
 				return std::format("version-{}.bin", a_version.string());
 			}
+		}
+
+		/**
+		 * The Address Library file this library will load for the running game, or an empty path when it is
+		 * missing. Same name and folders as IDDatabase::load: named after the executable's version (SKSE VR
+		 * reports another build number), AddressLibV2 as fallback, VR only from Data/SKSE/Plugins.
+		 * Usable before SKSE::Init, which ends the game when the file is missing.
+		 */
+		[[nodiscard]] static std::filesystem::path FindAddressLibrary()
+		{
+			const auto version = get().version();
+			const auto name = AddressLibraryFileName(version);
+			std::error_code ec;
+			auto path = std::filesystem::path("Data/SKSE/Plugins") / name;
+			if (std::filesystem::exists(path, ec)) {
+				return path;
+			}
+			if (RuntimeFor(version) != Runtime::VR) {
+				path = std::filesystem::path("Data/SKSE/Plugins/AddressLibV2") / name;
+				if (std::filesystem::exists(path, ec)) {
+					return path;
+				}
+			}
+			return {};
 		}
 
 	private:

@@ -42,6 +42,8 @@ namespace SKSE
 	constexpr auto         RUNTIME_SSE_LATEST_SE = RUNTIME_SSE_1_5_97;
 	constexpr auto         RUNTIME_SSE_LATEST = RUNTIME_SSE_LATEST_AE;
 
+	// The executable's file version is 1.4.15.0; SKSE VR reports the runtime as 1.4.15.1.
 	constexpr REL::Version RUNTIME_VR_1_4_15(1, 4, 15, 0);
-	constexpr auto         RUNTIME_LATEST_VR = RUNTIME_VR_1_4_15;
+	constexpr REL::Version RUNTIME_VR_1_4_15_1(1, 4, 15, 1);
+	constexpr auto         RUNTIME_LATEST_VR = RUNTIME_VR_1_4_15_1;
 }
