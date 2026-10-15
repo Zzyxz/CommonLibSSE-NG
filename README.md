@@ -99,6 +99,7 @@ Compared with CommonLibSSE NG 3.7.0 (commit `b93280e8`):
   - `bhkWorld`: AE 1.7 inserts 0x108 bytes at 0xC5D8; `tau`, `damping`, `toggleCollision` and the other members from there are in `GetStepData()`.
   - `PlayerInputHandler` and `MenuEventHandler`: AE 1.7 and VR have more virtual functions at slot 02 (PlayerInputHandler: two on both; MenuEventHandler: two on AE 1.7, three on VR). `GameSlot()`, the `CallProcess...()` functions and `UseGameVTableLayout()` (for handler classes written in a plugin) handle the shift. This affects every player input handler, camera state and menu input handler.
   - `BSSaveDataSystemUtility`: AE 1.7 moved the members and added six virtual functions at slot 05; the members are only declared in builds without AE.
+- `BSSimpleList`: `begin() const` did not compile (it built a `const_iterator` from the `const Node*` head), so a range-for over a const list such as `const TESQuest::objectives` failed with C2440. The const overloads work now.
 - Additions: `REL/Callsite.h`, `REL::RuntimeMember` (also with separate AE 1.6 and AE 1.7 offsets), `REL::IsAE17`, `REL::RelocateAE17`, `REL::InsertVTableSlots`, `REL::Module::RuntimeFor` and `AddressLibraryFileName`, `PluginVersionData::UsesAddressLibraryV5` and `UsesUpdatedStructs`.
 
 ## Known limits

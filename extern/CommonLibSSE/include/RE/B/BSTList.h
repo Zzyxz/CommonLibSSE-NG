@@ -222,7 +222,7 @@ namespace RE
 		}
 
 		[[nodiscard]] inline iterator       begin() { return empty() ? end() : iterator(get_head()); }
-		[[nodiscard]] inline const_iterator begin() const { return empty() ? end() : const_iterator(get_head()); }
+		[[nodiscard]] inline const_iterator begin() const { return empty() ? end() : const_iterator(const_cast<Node*>(get_head())); }
 		[[nodiscard]] inline const_iterator cbegin() const { return begin(); }
 
 		[[nodiscard]] constexpr iterator       end() noexcept { return iterator(nullptr); }
