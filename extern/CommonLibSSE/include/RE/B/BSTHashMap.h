@@ -106,10 +106,12 @@ namespace RE
 
 			union value_union
 			{
+				// The entry owns the value's lifetime (has_value() = next != nullptr; emplace/destroy).
+				// Empty slots, including those in game-owned tables, must not be constructed or destroyed.
 				value_union() :
-					value() {}
+					buffer{} {}
 
-				~value_union() { value.~value_type(); }
+				~value_union() {}
 
 				value_type value;
 				std::byte  buffer[sizeof(value_type)]{ static_cast<std::byte>(0) };
