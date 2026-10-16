@@ -44,7 +44,8 @@ namespace RE
 	void MagicCaster::PlayReleaseSound(MagicItem* a_item)
 	{
 		using func_t = decltype(&MagicCaster::PlayReleaseSound);
-		REL::Relocation<func_t> func{ RELOCATION_ID(33675, 34448) };
+		// SE 33668 (NG had 33675, a different function); VR 0x553F50 is missing from the VR Address Library.
+		REL::Relocation<func_t> func{ REL::VariantID(33668, 34448, 0x553F50) };
 		return func(this, a_item);
 	}
 
