@@ -154,7 +154,9 @@ namespace RE
 		}
 
 		// members
+#ifndef SKYRIM_CROSS_VR
 		RUNTIME_DATA_CONTENT  // 110, 100
+#endif
 	};
 #ifndef ENABLE_SKYRIM_VR
 	static_assert(sizeof(TESAmmo) == 0x128);
