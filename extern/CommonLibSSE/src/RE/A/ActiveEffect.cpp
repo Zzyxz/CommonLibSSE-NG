@@ -29,20 +29,13 @@ namespace RE
 
 	Actor* ActiveEffect::GetTargetActor()
 	{
-		if (target && target->MagicTargetIsActor()) {
-			return reinterpret_cast<Actor*>(target);
-		} else {
-			return nullptr;
-		}
+		// The target is the actor's MagicTarget base, not the actor itself (see MagicTarget::GetTargetAsActor).
+		return target ? target->GetTargetAsActor() : nullptr;
 	}
 
 	const Actor* ActiveEffect::GetTargetActor() const
 	{
-		if (target && target->MagicTargetIsActor()) {
-			return reinterpret_cast<const Actor*>(target);
-		} else {
-			return nullptr;
-		}
+		return target ? target->GetTargetAsActor() : nullptr;
 	}
 
 	float ActiveEffect::GetMagnitude() const

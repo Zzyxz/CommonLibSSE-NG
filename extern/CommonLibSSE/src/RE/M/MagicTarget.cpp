@@ -37,7 +37,10 @@ namespace RE
 	Actor* MagicTarget::GetTargetAsActor()
 	{
 		if (MagicTargetIsActor()) {
-			return reinterpret_cast<Actor*>(this);
+			// MagicTarget is a base class of Actor, not its start: SE 1.5 / AE before 1.6.629 / VR at +0x98, AE 1.6.629+ at
+			// +0xA0 (RTTI complete object locators of Character; the same offsets as Actor::AsMagicTarget).
+			const std::ptrdiff_t offset = REL::Module::get().version().compare(SKSE::RUNTIME_SSE_1_6_629) == std::strong_ordering::less ? 0x98 : 0xA0;
+			return reinterpret_cast<Actor*>(reinterpret_cast<std::uintptr_t>(this) - offset);
 		}
 
 		return nullptr;
