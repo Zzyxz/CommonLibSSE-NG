@@ -43,6 +43,9 @@ namespace REL
 
             bool create(stl::zwstring a_name, std::size_t a_size);
 
+            // A mapping only this plugin uses (no name), for when the shared one cannot be used.
+            bool create_private(std::size_t a_size);
+
             void close();
 
         private:

@@ -77,6 +77,38 @@ namespace REL
 			return true;
 		}
 
+		bool memory_map::create_private(std::size_t a_size)
+		{
+			close();
+
+			REX::W32::ULARGE_INTEGER bytes;
+			bytes.value = a_size;
+
+			_mapping = REX::W32::CreateFileMappingW(
+				REX::W32::INVALID_HANDLE_VALUE,
+				nullptr,
+				REX::W32::PAGE_READWRITE,
+				bytes.hi,
+				bytes.lo,
+				nullptr);
+			if (!_mapping) {
+				return false;
+			}
+
+			_view = REX::W32::MapViewOfFile(
+				_mapping,
+				REX::W32::FILE_MAP_READ | REX::W32::FILE_MAP_WRITE,
+				0,
+				0,
+				bytes.value);
+			if (!_view) {
+				close();
+				return false;
+			}
+
+			return true;
+		}
+
 		void memory_map::close()
 		{
 			if (_view) {
@@ -114,16 +146,41 @@ namespace REL
 			auto mapname = header.is_v5() ? L"CommonLibSSEOffsets-v5-"s : L"CommonLibSSEOffsets-v2-"s;
 			mapname += a_version.wstring();
 			const auto byteSize = static_cast<std::size_t>(header.address_count()) * sizeof(mapping_t);
-			if (_mmap.open(mapname, byteSize)) {
-				_id2offset = { static_cast<mapping_t*>(_mmap.data()), header.address_count() };
-			} else if (_mmap.create(mapname, byteSize)) {
+			// A mapping with this name that another plugin (or a tool that injects its own DLL) created
+			// with another size or layout is not used: it would give wrong addresses.
+			const auto looksValid = [](std::span<mapping_t> a_table) {
+				if (a_table.empty()) {
+					return false;
+				}
+				for (std::size_t i = 0; i < a_table.size(); ++i) {
+					if (a_table[i].offset >= 0x10000000 || (i > 0 && a_table[i].id <= a_table[i - 1].id)) {
+						return false;
+					}
+				}
+				return true;
+			};
+			const auto unpackInto = [&]() {
 				_id2offset = { static_cast<mapping_t*>(_mmap.data()), header.address_count() };
 				unpack_file(in, header, a_failOnError);
 				std::sort(_id2offset.begin(), _id2offset.end(), [](auto&& a_lhs, auto&& a_rhs) {
 					return a_lhs.id < a_rhs.id;
 				});
-			} else {
-				return stl::report_and_error("failed to create shared mapping"sv, a_failOnError);
+			};
+			bool ready = false;
+			if (_mmap.open(mapname, byteSize)) {
+				_id2offset = { static_cast<mapping_t*>(_mmap.data()), header.address_count() };
+				ready = looksValid(_id2offset);
+				// Never write into a mapping that belongs to someone else: use an own copy below.
+			} else if (_mmap.create(mapname, byteSize)) {
+				unpackInto();
+				ready = true;
+			}
+			if (!ready) {
+				// The shared mapping is taken or broken: this plugin keeps its own copy.
+				if (!_mmap.create_private(byteSize)) {
+					return stl::report_and_error("failed to create shared mapping"sv, a_failOnError);
+				}
+				unpackInto();
 			}
 		} catch (const std::system_error &) {
 			return stl::report_and_error(
