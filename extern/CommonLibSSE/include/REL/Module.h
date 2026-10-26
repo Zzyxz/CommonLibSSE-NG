@@ -325,25 +325,38 @@ namespace REL
 
 		bool init()
 		{
-			const auto getFilename = [&]() {
-				return REX::W32::GetEnvironmentVariableW(
-						ENVIRONMENT.data(),
-						_filename.data(),
-						static_cast<std::uint32_t>(_filename.size()));
-			};
-
+			// The executable: the one SKSE_RUNTIME names (optional), else the known names, else the process's own
+			// executable (a renamed game exe). Before, a set SKSE_RUNTIME skipped every lookup and always failed.
 			void *moduleHandle = nullptr;
-			_filename.resize(getFilename());
-			if (const auto result = getFilename();
-					result != _filename.size() - 1 ||
-					result == 0) {
-				for (auto runtime : RUNTIMES) {
-					_filename = runtime;
-					moduleHandle = REX::W32::GetModuleHandleW(_filename.c_str());
+			_filename.clear();
+			if (const auto size = REX::W32::GetEnvironmentVariableW(ENVIRONMENT.data(), nullptr, 0); size > 1) {
+				std::wstring value(size, L'\0');
+				const auto length = REX::W32::GetEnvironmentVariableW(ENVIRONMENT.data(), value.data(), size);
+				if (length > 0 && length < size) {
+					value.resize(length);
+					moduleHandle = REX::W32::GetModuleHandleW(value.c_str());
 					if (moduleHandle) {
+						_filename = std::move(value);
+					}
+				}
+			}
+			if (!moduleHandle) {
+				for (auto runtime : RUNTIMES) {
+					moduleHandle = REX::W32::GetModuleHandleW(runtime.data());
+					if (moduleHandle) {
+						_filename = runtime;
 						break;
 					}
 				}
+			}
+			if (!moduleHandle) {
+				moduleHandle = REX::W32::GetModuleHandleW(nullptr);
+				std::wstring path(REX::W32::MAX_PATH, L'\0');
+				const auto length = moduleHandle ?
+				                        REX::W32::GetModuleFileNameW(static_cast<REX::W32::HMODULE>(moduleHandle), path.data(), static_cast<std::uint32_t>(path.size())) :
+				                        0u;
+				_filename = length > 0 && length < path.size() ? std::filesystem::path(path.substr(0, length)).filename().wstring() :
+				                                                 std::wstring(RUNTIMES.back());
 			}
 			_filePath = _filename;
 			if (!moduleHandle) {
