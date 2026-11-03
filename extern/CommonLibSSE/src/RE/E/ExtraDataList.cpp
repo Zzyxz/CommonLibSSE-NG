@@ -129,7 +129,7 @@ namespace RE
 
 		bool removed = false;
 
-		while (_extraData.GetData()->GetType() == a_type) {
+		while (_extraData.GetData() && _extraData.GetData()->GetType() == a_type) {
 			auto tmp = _extraData.GetData();
 			_extraData.GetData() = _extraData.GetData()->next;
 			delete tmp;
@@ -137,7 +137,7 @@ namespace RE
 		}
 
 		auto prev = _extraData.GetData();
-		for (auto cur = _extraData.GetData()->next; cur; cur = cur->next) {
+		for (auto cur = prev ? prev->next : nullptr; cur; cur = cur->next) {
 			if (cur->GetType() == a_type) {
 				prev->next = cur->next;
 				delete cur;
