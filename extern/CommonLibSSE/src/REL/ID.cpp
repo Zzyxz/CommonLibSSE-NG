@@ -153,7 +153,11 @@ namespace REL
 					return false;
 				}
 				for (std::size_t i = 0; i < a_table.size(); ++i) {
-					if (a_table[i].offset >= 0x10000000 || (i > 0 && a_table[i].id <= a_table[i - 1].id)) {
+					if (a_table[i].offset >= 0x10000000) {
+						return false;
+					}
+					if (i > 0 && a_table[i].id <= a_table[i - 1].id &&
+						a_table[i].id != (std::numeric_limits<std::uint64_t>::max)()) {
 						return false;
 					}
 				}
